@@ -18,6 +18,7 @@ client.login(config.BOT_TOKEN).catch(err => {
 
 
 client.on("ready", function () {
+    client.user.setActivity("Minecraft");
     bday.bday(client);
     poe_characters.poe_characters(client);
 });
