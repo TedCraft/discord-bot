@@ -187,6 +187,11 @@ client.on("message", function (message) {
         music.nowPlaying(message, serverQueue);
     }
 
+    else if (command === "q" || command === "queue") {
+        const serverQueue = queue.get(message.guild.id);
+        music.getQueue(message, serverQueue);
+    }
+
     else if (command === "правила") {
         if (ch != null) {
             const serverQueue = queue.get(message.guild.id);

@@ -12,6 +12,7 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
     const song = {
         title: null,
         url: null,
+        user: message.author.username
     }
     if (url === true) {
         const args = message.content.split(' ');
@@ -94,14 +95,33 @@ function disconnect(message, serverQueue) {
     serverQueue.connection.dispatcher.end();
 }
 
-async function nowPlaying(message, serverQueue) {
+function nowPlaying(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Сейчас ничего не играет`);
     if (serverQueue.songs[0].url != null) {
-        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title}\``);
+        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title}\` от \`${serverQueue.songs[0].user}\``);
     }
     else {
-        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title.replace(/_/gi, " ")}\``)
+        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[0].user}\``);
     }
+}
+
+async function getQueue(message, serverQueue) {
+    if (!serverQueue) return message.channel.send(`Очередь пуста`);
+    var str = "";
+    for(let i = 0; i<(serverQueue.songs.length<10?serverQueue.songs.length:10); i++)
+    {
+        if (serverQueue.songs[i].url != null) {
+            str +=`${i+1}. \`${serverQueue.songs[i].title}\` от \`${serverQueue.songs[i].user}\`\n`;
+        }
+        else {
+            str +=`${i+1}. \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[i].user}\`\n`;
+        }
+        str+='---------------------------------------------------------------------------------------------';
+        if(i<serverQueue.songs.length-1){
+            str+='\n'
+        }
+    }
+    message.channel.send(str);
 }
 
 async function play(guild, song, queue) {
@@ -114,12 +134,14 @@ async function play(guild, song, queue) {
     }
 
     if (song.url != null) {
-        const dispatcher = serverQueue.connection.play(ytdl(song.url, { filter: "audioonly", quality: 'highestaudio', highWaterMark: 1 << 25 }))
+        const dispatcher = serverQueue.connection.play(ytdl(song.url, { filter: "audioonly", quality: 'highestaudio' }))
             .on('finish', () => {
                 serverQueue.songs.shift();
                 play(guild, serverQueue.songs[0], queue);
             })
             .on('error', error => {
+                serverQueue.voiceChannel.leave();
+                queue.delete(guild.id);
                 console.error(error);
             });
         dispatcher.setVolume(serverQueue.volume / 5);
@@ -131,6 +153,8 @@ async function play(guild, song, queue) {
                 play(guild, serverQueue.songs[0], queue);
             })
             .on('error', error => {
+                serverQueue.voiceChannel.leave();
+                queue.delete(guild.id);
                 console.error(error);
             });
         dispatcher.setVolume(serverQueue.volume / 5);
@@ -141,3 +165,4 @@ module.exports.add = add;
 module.exports.skip = skip;
 module.exports.disconnect = disconnect;
 module.exports.nowPlaying = nowPlaying;
+module.exports.getQueue = getQueue;
