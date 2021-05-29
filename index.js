@@ -3,7 +3,6 @@ const config = require("./config.json");
 const bday = require("./bday/bday.js");
 const music = require("./music/music.js");
 const poe_characters = require("./poe/poe_characters/poe_characters.js");
-//const { checkSize } = require("lzma-native");
 var queue = new Map();
 
 function getRandomInRange(min, max) {
@@ -18,6 +17,7 @@ client.login(config.BOT_TOKEN).catch(err => {
 
 
 client.on("ready", function () {
+    client.user.setActivity("Minecraft");
     bday.bday(client);
     poe_characters.poe_characters(client);
 });

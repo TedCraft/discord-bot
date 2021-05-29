@@ -1,4 +1,6 @@
 const ytdl = require('ytdl-core');
+const Discord = require("discord.js");
+const { getAudioDurationInSeconds } = require('get-audio-duration');
 
 async function add(message, serverQueue, queue, count = 1, url = true, file_name = "") {
     const voiceChannel = message.member.voice.channel;
@@ -12,16 +14,23 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
     const song = {
         title: null,
         url: null,
-        user: message.author.username
+        user: message.author.username,
+        thumbnail: null,
+        length: null
     }
     if (url === true) {
         const args = message.content.split(' ');
         const songInfo = await ytdl.getInfo(args[1]);
         song.title = songInfo.videoDetails.title;
         song.url = songInfo.videoDetails.video_url;
+        song.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
+        song.length = songInfo.videoDetails.lengthSeconds;
     }
     else {
         song.title = file_name;
+        getAudioDurationInSeconds(`./music/${song.title}.mp3`).then((duration) =>{
+            song.length = duration;
+        });
     }
 
     if (!serverQueue) {
@@ -97,28 +106,53 @@ function disconnect(message, serverQueue) {
 
 function nowPlaying(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Сейчас ничего не играет`);
+
+    const embed = new Discord.MessageEmbed();
+    embed.setColor('RANDOM');
+    embed.setTitle('Сейчас играет');
+
+    var str = "";
     if (serverQueue.songs[0].url != null) {
-        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title}\` от \`${serverQueue.songs[0].user}\``);
+        str += (`\`${serverQueue.songs[0].title}\`\n\n`);
     }
     else {
-        message.channel.send(`Сейчас играет: \`${serverQueue.songs[0].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[0].user}\``);
+        str += (`\`${serverQueue.songs[0].title.replace(/_/gi, " ")}\`\n\n`);
     }
+    var curTime = msToTime(serverQueue.connection.dispatcher.streamTime)
+    var lenTime = sToTime(serverQueue.songs[0].length);
+    while (lenTime.length > 4) {
+        if (lenTime[0] === '0' || lenTime[0] === ':') {
+            curTime = curTime.slice(1);
+            lenTime = lenTime.slice(1);
+        }
+        else {
+            break;
+        }
+    }
+    str += `\`${curTime} / ${lenTime}\``
+    embed.setDescription(str);
+
+    embed.setFooter(`от ${serverQueue.songs[0].user}`);
+    if (serverQueue.songs[0].thumbnail != null) {
+        embed.setThumbnail(serverQueue.songs[0].thumbnail);
+    }
+
+    message.channel.send(embed);
 }
 
 async function getQueue(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Очередь пуста`);
     var str = "";
-    for(let i = 0; i<(serverQueue.songs.length<10?serverQueue.songs.length:10); i++)
-    {
+    for (let i = 0; i < (serverQueue.songs.length < 10 ? serverQueue.songs.length : 10); i++) {
         if (serverQueue.songs[i].url != null) {
-            str +=`${i+1}. \`${serverQueue.songs[i].title}\` от \`${serverQueue.songs[i].user}\`\n`;
+            str += `${i + 1}. \`${serverQueue.songs[i].title}\` от \`${serverQueue.songs[i].user}\`\n`;
         }
         else {
-            str +=`${i+1}. \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[i].user}\`\n`;
+            str += `${i + 1}. \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[i].user}\`\n`;
         }
-        str+='---------------------------------------------------------------------------------------------';
-        if(i<serverQueue.songs.length-1){
-            str+='\n'
+        str += '---------------------------------------------------------------------------------------------';
+        if (i < serverQueue.songs.length - 1) {
+            str += '\n'
         }
     }
     message.channel.send(str);
@@ -157,8 +191,31 @@ async function play(guild, song, queue) {
                 queue.delete(guild.id);
                 console.error(error);
             });
-        dispatcher.setVolume(serverQueue.volume / 5);
+        dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     }
+}
+
+function msToTime(duration) {
+    var seconds = parseInt((duration / 1000) % 60)
+        , minutes = parseInt((duration / (1000 * 60)) % 60)
+        , hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+    hours = (hours < 10) ? "0" + hours : hours;
+    minutes = (minutes < 10) ? "0" + minutes : minutes;
+    seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+    return hours + ":" + minutes + ":" + seconds;
+}
+
+function sToTime(duration) {
+    var minutes = parseInt((duration / 60) % 60)
+        , seconds = parseInt(duration - minutes * 60)
+        , hours = parseInt((duration / (60 * 60)) % 24);
+
+    hours = (hours < 10) ? "0" + hours : hours;
+    minutes = (minutes < 10) ? "0" + minutes : minutes;
+
+    return hours + ":" + minutes + ":" + seconds;
 }
 
 module.exports.add = add;

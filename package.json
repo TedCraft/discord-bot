@@ -16,6 +16,7 @@
     "ffmpeg-static": "^4.2.8",
     "ffmpeg-stream": "^0.7.0",
     "fluent-ffmpeg": "^2.1.2",
+    "get-audio-duration": "^2.0.3",
     "got": "^11.8.2",
     "i": "^0.3.6",
     "lzma-native": "^7.0.1",
