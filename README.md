@@ -4,8 +4,6 @@
 
 ```json
 {
-
     "BOT_TOKEN": "Your token"
-
 }
 ```
