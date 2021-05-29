@@ -3,5 +3,7 @@
 Установите все модули для node (npm install) а также добавте файл config.json с такой структурой:
 
 `{
-    "BOT_TOKEN": "Your token"
-}`
+`
+`    "BOT_TOKEN": "Your token"
+`
+`}
