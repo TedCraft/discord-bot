@@ -4,6 +4,6 @@
 
 `{`
 ``
-`    "BOT_TOKEN": "Your token"`
+    "BOT_TOKEN": "Your token"
 ``
 `}`
