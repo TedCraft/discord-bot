@@ -192,6 +192,11 @@ client.on("message", function (message) {
         music.getQueue(message, serverQueue);
     }
 
+    else if (command === "c" || command === "copy") {
+        const serverQueue = queue.get(message.guild.id);
+        music.copy(message, serverQueue);
+    }
+
     else if (command === "правила") {
         if (ch != null) {
             const serverQueue = queue.get(message.guild.id);
