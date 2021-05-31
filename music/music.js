@@ -1,8 +1,9 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
 const Discord = require("discord.js");
 const { getAudioDurationInSeconds } = require('get-audio-duration');
+const async = require('async');
 
 async function add(message, serverQueue, queue, count = 1, url = true, file_name = "") {
     const voiceChannel = message.member.voice.channel;
@@ -30,21 +31,7 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
             const pl = await ytpl(args[1]);
             const plSongs = pl.items;
             let songs = [];
-            for (let i = 0; i < plSongs.length; i++) {
-                let songInfo = await ytdl.getInfo(plSongs[i].url);
-                let tempSong = {
-                    title: null,
-                    url: null,
-                    user: message.author.username,
-                    thumbnail: null,
-                    length: null
-                }
-                tempSong.title = songInfo.videoDetails.title;
-                tempSong.url = songInfo.videoDetails.video_url;
-                tempSong.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
-                tempSong.length = sToTime(songInfo.videoDetails.lengthSeconds);
-                songs.push(tempSong);
-            }
+            songs = await getSongsData(plSongs, message);
             playlist.push(songs);
             playlist.push(pl.title);
         }
@@ -92,7 +79,9 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
         }
         else {
             for (let i = 0; i < count; i++) {
-                queueContruct.songs = playlist[0];
+                playlist[0].forEach(song => {
+                    queueContruct.songs.push(song);
+                });
             }
         }
 
@@ -145,13 +134,53 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
         }
         else {
             for (let i = 0; i < count; i++) {
-                serverQueue.songs = playlist[0];
+                playlist[0].forEach(song => {
+                    serverQueue.songs.push(song);
+                });
             }
             count == 1 ?
                 message.channel.send(`Плейлист \`${playlist[1]}\` добавлен в очередь`) :
                 message.channel.send(`Плейлист \`${playlist[1]}\` добавлен в очередь (${count})`);
         }
     }
+}
+
+async function getSongsData(plSongs, message) {
+    let songs = [];
+    await async.forEach(plSongs, async function (song, callback) {
+        let songInfo = await ytdl.getInfo(song.shortUrl);
+        let tempSong = {
+            title: null,
+            url: null,
+            user: message.author.username,
+            thumbnail: null,
+            length: null
+        }
+        tempSong.title = songInfo.videoDetails.title;
+        tempSong.url = songInfo.videoDetails.video_url;
+        tempSong.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
+        tempSong.length = sToTime(songInfo.videoDetails.lengthSeconds);
+        songs.push(tempSong);
+    })
+
+    let metka = true;
+    while (metka == true) {
+        metka = false;
+        for (let i = 0; i < songs.length; i++) {
+            if (songs[i].url != plSongs[i].shortUrl) {
+                for (let j = 0; j < songs.length; j++) {
+                    if (songs[i].url === plSongs[j].shortUrl) {
+                        let temp = songs[i];
+                        songs[i] = songs[j];
+                        songs[j] = temp;
+                        metka = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return songs;
 }
 
 function skip(message, serverQueue, count = 1) {
@@ -262,7 +291,7 @@ async function play(guild, song, queue) {
     }
 
     if (song.url != null) {
-        const dispatcher = serverQueue.connection.play(ytdl(song.url, { filter: "audioonly", quality: 'highestaudio' }))
+        const dispatcher = serverQueue.connection.play(await ytdl(song.url, { filter: "audioonly", quality: 'highestaudio' }), { type: 'opus' })
             .on('finish', () => {
                 serverQueue.songs.shift();
                 play(guild, serverQueue.songs[0], queue);
