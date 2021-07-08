@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core-discord');
+const ytdl = require('discord-ytdl-core');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
 const Discord = require("discord.js");
@@ -28,7 +28,7 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
         if (args[1] == undefined) return;
 
         if (args[1].match(/^(http|https):\/\/(www\.)?(youtube.com|youtu.be)\/playlist/) != null) {
-            const pl = await ytpl(args[1]);
+            const pl = await ytpl(args[1]/*, { limit: Infinity }*/);
             const plSongs = pl.items;
             let songs = [];
             songs = await getSongsData(plSongs, message);
@@ -40,7 +40,7 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
             song.title = songInfo.videoDetails.title;
             song.url = songInfo.videoDetails.video_url;
             song.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
-            song.length = sToTime(songInfo.videoDetails.lengthSeconds);
+            song.length = songInfo.videoDetails.lengthSeconds;
         }
         else {
             let str = "";
@@ -52,7 +52,7 @@ async function add(message, serverQueue, queue, count = 1, url = true, file_name
             song.title = songInfo.videoDetails.title;
             song.url = songInfo.videoDetails.video_url;
             song.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
-            song.length = sToTime(songInfo.videoDetails.lengthSeconds);
+            song.length = songInfo.videoDetails.lengthSeconds;
         }
     }
     else {
@@ -159,7 +159,7 @@ async function getSongsData(plSongs, message) {
         tempSong.title = songInfo.videoDetails.title;
         tempSong.url = songInfo.videoDetails.video_url;
         tempSong.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
-        tempSong.length = sToTime(songInfo.videoDetails.lengthSeconds);
+        tempSong.length = songInfo.videoDetails.lengthSeconds;
         songs.push(tempSong);
     })
 
@@ -168,7 +168,7 @@ async function getSongsData(plSongs, message) {
         metka = false;
         for (let i = 0; i < songs.length; i++) {
             if (songs[i].url != plSongs[i].shortUrl) {
-                for (let j = 0; j < songs.length; j++) {
+                for (let j = i; j < songs.length; j++) {
                     if (songs[i].url === plSongs[j].shortUrl) {
                         let temp = songs[i];
                         songs[i] = songs[j];
@@ -183,7 +183,7 @@ async function getSongsData(plSongs, message) {
     return songs;
 }
 
-function skip(message, serverQueue, count = 1) {
+async function skip(message, serverQueue, count = 1) {
     if (!message.member.voice.channel) return message.channel.send(`${message.author} зайди в войс канал`);
     if (!serverQueue) return message.channel.send(`В очереди пусто`);
 
@@ -202,22 +202,22 @@ function disconnect(message, serverQueue) {
     serverQueue.connection.dispatcher.end();
 }
 
-function nowPlaying(message, serverQueue) {
+async function nowPlaying(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Сейчас ничего не играет`);
 
     const embed = new Discord.MessageEmbed();
-    embed.setColor('RANDOM');
+    embed.setColor('RED');
     embed.setTitle('Сейчас играет');
 
     let str = "";
     if (serverQueue.songs[0].url != null) {
-        str += (`\`${serverQueue.songs[0].title}\`\n\n`);
+        str += (`\[${serverQueue.songs[0].title}\]\(${serverQueue.songs[0].url}\)\n`);
     }
     else {
-        str += (`\`${serverQueue.songs[0].title.replace(/_/gi, " ")}\`\n\n`);
+        str += (`\`${serverQueue.songs[0].title.replace(/_/gi, " ")}\`\n`);
     }
     let curTime = msToTime(serverQueue.connection.dispatcher.streamTime)
-    let lenTime = serverQueue.songs[0].length;
+    let lenTime = sToTime(serverQueue.songs[0].length);
     while (lenTime.length > 4) {
         if (lenTime[0] === '0' || lenTime[0] === ':') {
             curTime = curTime.slice(1);
@@ -241,23 +241,66 @@ function nowPlaying(message, serverQueue) {
 
 async function getQueue(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Очередь пуста`);
-    let str = "";
-    for (let i = 0; i < (serverQueue.songs.length < 10 ? serverQueue.songs.length : 10); i++) {
-        if (serverQueue.songs[i].url != null) {
-            str += `${i + 1}. \`${serverQueue.songs[i].title}\` от \`${serverQueue.songs[i].user}\`\n`;
+
+    const embed = new Discord.MessageEmbed();
+    embed.setColor('PURPLE');
+    embed.setTitle('Очередь');
+
+    let str = "\*\*Сейчас играет:\*\*\n";
+    if (serverQueue.songs[0].url != null) {
+        str += (`\[${serverQueue.songs[0].title}\]\(${serverQueue.songs[0].url}\) от \`${serverQueue.songs[0].user}\`\n`);
+    }
+    else {
+        str += (`\`${serverQueue.songs[0].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[0].user}\`\n`);
+    }
+    let curTime = msToTime(serverQueue.connection.dispatcher.streamTime);
+    let lenTime = sToTime(serverQueue.songs[0].length);
+    let totTime = parseInt(serverQueue.songs[0].length);
+    while (lenTime.length > 4) {
+        if (lenTime[0] === '0' || lenTime[0] === ':') {
+            curTime = curTime.slice(1);
+            lenTime = lenTime.slice(1);
         }
         else {
-            str += `${i + 1}. \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[i].user}\`\n`;
-        }
-        str += '---------------------------------------------------------------------------------------------';
-        if (i < serverQueue.songs.length - 1) {
-            str += '\n'
+            break;
         }
     }
-    message.channel.send(str);
+    str += ` \`${curTime} / ${lenTime}\`\n\n`;
+
+    if (serverQueue.songs.length > 1) {
+        str += `\*\*Далее в очереди:\*\*\n`
+        for (let i = 1; i < (serverQueue.songs.length < 11 ? serverQueue.songs.length : 11); i++) {
+            if (serverQueue.songs[i].url != null) {
+                str += (`\`${i}.\` \[${serverQueue.songs[i].title}\]\(${serverQueue.songs[i].url}\)`);
+            }
+            else {
+                str += (`\`${i}.\` \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\``);
+            }
+            let lenTime = sToTime(serverQueue.songs[i].length);
+            while (lenTime.length > 4) {
+                if (lenTime[0] === '0' || lenTime[0] === ':') {
+                    lenTime = lenTime.slice(1);
+                }
+                else {
+                    break;
+                }
+            }
+            str += ` | \`${lenTime}\` от \`${serverQueue.songs[i].user}\``;
+            str += '\n\n';
+        }
+
+        for (let i = 1; i < serverQueue.songs.length; i++) {
+            totTime += parseInt(serverQueue.songs[i].length);
+        }
+    }
+
+    str += `\*\*Всего песен: \`${serverQueue.songs.length}\`. Длительность очереди: \`${sToTime(String(totTime))}\`\*\*`;
+    embed.setDescription(str);
+
+    message.channel.send(embed);
 }
 
-function copy(message, serverQueue) {
+async function copy(message, serverQueue) {
     if (!serverQueue) return message.channel.send(`Очередь пуста`);
     const args = message.content.split(" ");
     if (args.length == 1) return message.channel.send("Введите номер трека в очереди");
@@ -291,15 +334,17 @@ async function play(guild, song, queue) {
     }
 
     if (song.url != null) {
-        const dispatcher = serverQueue.connection.play(await ytdl(song.url, { filter: "audioonly", quality: 'highestaudio' }), { type: 'opus' })
+        const dispatcher = serverQueue.connection.play(ytdl(song.url, { filter: "audioonly", opusEncoded: true, highWaterMark: 1 << 25 }), { type: 'opus' })
             .on('finish', () => {
                 serverQueue.songs.shift();
                 play(guild, serverQueue.songs[0], queue);
             })
             .on('error', error => {
-                serverQueue.voiceChannel.leave();
-                queue.delete(guild.id);
+                /*serverQueue.voiceChannel.leave();
+                queue.delete(guild.id);*/
                 console.error(error);
+                serverQueue.songs.shift();
+                play(guild, serverQueue.songs[0], queue);
             });
         dispatcher.setVolume(serverQueue.volume / 5);
     }
@@ -331,9 +376,9 @@ function msToTime(duration) {
 }
 
 function sToTime(duration) {
-    var minutes = parseInt((duration / 60) % 60)
-        , seconds = parseInt(duration - minutes * 60)
-        , hours = parseInt((duration / (60 * 60)) % 24);
+    var hours = parseInt((duration / (60 * 60)) % 24)
+        , minutes = parseInt((duration / 60) % 60)
+        , seconds = parseInt(duration - (hours * 60 * 60 + minutes * 60));
 
     hours = (hours < 10) ? "0" + hours : hours;
     minutes = (minutes < 10) ? "0" + minutes : minutes;

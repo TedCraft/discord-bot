@@ -10,11 +10,10 @@ function getRandomInRange(min, max) {
 }
 
 const client = new Discord.Client({ fetchAllMembers: true });
-client.login(config.BOT_TOKEN).catch(err => {
+/*client.login(config.BOT_TOKEN).catch(err => {
     console.log("ошибка подключения бота");
     return this;
-});
-
+});*/
 
 client.on("ready", function () {
     client.user.setActivity("Minecraft");
@@ -28,7 +27,7 @@ client.on("guildMemberUpdate", function (user_old, user_new) {
             var temp = 0;
             for (i = 0; i < user_new.nickname.length; i++) {
                 if (user_new.nickname[i] === "!" || user_new.nickname[i] === " ") {
-                    temp++
+                    temp++;
                 }
                 else {
                     break;
@@ -38,7 +37,7 @@ client.on("guildMemberUpdate", function (user_old, user_new) {
                 var temp = 0;
                 for (i = 0; i < user_new.user.username.length; i++) {
                     if (user_new.user.username[i] === "!" || user_new.user.username[i] === " ") {
-                        temp++
+                        temp++;
                     }
                     else {
                         break;
@@ -66,7 +65,7 @@ client.on("guildMemberUpdate", function (user_old, user_new) {
         var temp = 0;
         for (i = 0; i < user_new.user.username.length; i++) {
             if (user_new.user.username[i] === "!" || user_new.user.username[i] === " ") {
-                temp++
+                temp++;
             }
             else {
                 break;
@@ -91,7 +90,7 @@ client.on("guildMemberAdd", function (user) {
         var temp = 0;
         for (i = 0; i < user.user.username.length; i++) {
             if (user.user.username[i] === "!" || user.user.username[i] === " ") {
-                temp++
+                temp++;
             }
             else {
                 break;
@@ -117,7 +116,7 @@ client.on("userUpdate", function (user_old, user_new) {
             var temp = 0;
             for (i = 0; i < user_new.username.length; i++) {
                 if (user_new.username[i] === "!" || user_new.username[i] === " ") {
-                    temp++
+                    temp++;
                 }
                 else {
                     break;
@@ -179,26 +178,26 @@ client.on("message", function (message) {
         const serverQueue = queue.get(message.guild.id);
         music.skip(message, serverQueue, args[0] != undefined ?
             (args[0].toLowerCase() === "all" ? "all" : (!isNaN(parseInt(args[0])) ? args[0] : 1))
-            : undefined);
+            : undefined).catch(err => { message.channel.send("Отказано") });
     }
 
     else if (command === "np" || (command === "now" && args[0] === "playing")) {
         const serverQueue = queue.get(message.guild.id);
-        music.nowPlaying(message, serverQueue);
+        music.nowPlaying(message, serverQueue).catch(err => { message.channel.send("Отказано") });
     }
 
     else if (command === "q" || command === "queue") {
         const serverQueue = queue.get(message.guild.id);
-        music.getQueue(message, serverQueue);
+        music.getQueue(message, serverQueue).catch(err => { message.channel.send("Отказано") });
     }
 
     else if (command === "c" || command === "copy") {
         const serverQueue = queue.get(message.guild.id);
-        music.copy(message, serverQueue);
+        music.copy(message, serverQueue).catch(err => { message.channel.send("Отказано") });
     }
 
     else if (command === "правила") {
-        if (ch != null) {
+        if (message.member.voice.channel != null) {
             const serverQueue = queue.get(message.guild.id);
             music.add(message, serverQueue, queue, !isNaN(parseInt(args[0])) ? args[0] : 1,
                 false, "rules").catch(err => { message.channel.send("Отказано") });
