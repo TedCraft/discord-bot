@@ -163,6 +163,17 @@ client.on("message", function (message) {
         message.channel.send(`АХАХА ${message.author} рипнулся в пое!!`, attachment);
     }
 
+    else if (command === "кирилл" || command === "торч") {
+        const startDate = new Date("06/28/2021");
+        const dateDiff = Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        if(command === "кирилл") {
+            message.channel.send(`Кирилл в армии уже \`${dateDiff}\` дней :pleading_face::point_right::point_left:`);
+        }
+        else {
+            message.channel.send(`Торч в армии уже \`${dateDiff}\` дней :pleading_face::point_right::point_left:`);
+        }
+    }
+
     else if (command === "p" || command === "play") {
         const serverQueue = queue.get(message.guild.id);
         music.add(message, serverQueue, queue, !isNaN(parseInt(args[1])) ? args[1] : 1)
