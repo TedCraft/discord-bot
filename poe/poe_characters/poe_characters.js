@@ -31,9 +31,10 @@ async function poe_characters(client) {
                         for (var j in cfg_mas[i]) {
                             try {
                                 if (current_json[j]["name"] != cfg_mas[i][j]["name"]) {
-                                    break;
+                                    continue;
                                 }
-                                if (current_json[j]["league"] != cfg_mas[i][j]["league"] && current_json[j]["league"] === "Standard") {
+                                if (current_json[j]["league"] != cfg_mas[i][j]["league"] && 
+                                (current_json[j]["league"] === "Standard" || current_json[j]["league"] === "SSF Standard")) {
                                     const attachment = new Discord.MessageAttachment('https://i.imgur.com/w3duR07.png');
                                     channel.send(`АХАХА ${user} рипнул ${cfg_mas[i][j]["name"]} в пое!!!`, attachment);
                                 }
@@ -50,6 +51,6 @@ async function poe_characters(client) {
                     console.log("ошибка sql запроса");
                 });
             }
-    }, 60000);
+    }, 15000);
 };
 module.exports.poe_characters = poe_characters;
