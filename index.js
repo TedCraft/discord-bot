@@ -144,6 +144,9 @@ client.on("message", function (message) {
     if (message.content.toLowerCase().indexOf("свин") != -1) {
         message.channel.send("олег))");
     }
+    if (message.content.toLowerCase().indexOf("/unmute vilen2004") != -1) {
+        message.channel.send('а чё, такая команда реально есть? :thinking:');
+    }
     /*if (message.author.id.toString()==="205350885042159617")
     {
         const attachment = new Discord.MessageAttachment('https://sun9-23.userapi.com/impf/jJ9M_-kCyO7Ag1k70-ROLf3rb9OANanSPOn11w/cfkHsRLfaQI.jpg?size=1205x718&quality=96&sign=e440c1fa6eea13c40bf200d9a71e9438&type=album');
@@ -206,9 +209,9 @@ client.on("message", function (message) {
                         ctx.fillStyle = '#000';
                         ctx.fillText(text.toUpperCase(), 580, 300);
 
-                        var length1 = ctx.measureText(text.toUpperCase()).width;
-                        var length2 = ctx.measureText("НАЗАД").width;
-                        ctx.fillText("НАЗАД", 580 + Math.floor(length1 / 2) - Math.floor(length2 / 2), 380);
+                        const length1 = ctx.measureText(text.toUpperCase()).width;
+                        const length2 = ctx.measureText("НАЗАД").width;
+                        ctx.fillText("НАЗАД", 580 + Math.round(length1 / 2) - Math.round(length2 / 2), 380);
 
                         message.channel.send(new Discord.MessageAttachment(canvas.createPNGStream()));
                     });
@@ -289,6 +292,13 @@ client.on("message", function (message) {
         const serverQueue = queue.get(message.guild.id);
         music.add(message, serverQueue, queue, !isNaN(parseInt(args[1])) ? args[1] : 1,
             false, "XARAKTER_-_NO_HOMO").catch(err => { message.channel.send("Отказано") });
+    }
+
+    else if (command === "пеньков") {
+        message.channel.send("Я ненавижу преступность");
+        const serverQueue = queue.get(message.guild.id);
+        music.add(message, serverQueue, queue, !isNaN(parseInt(args[0])) ? args[1] : 1,
+            false, "Я_ненавижу_преступность").catch(err => { message.channel.send("Отказано") });
     }
 
     else if (command === "roll") {

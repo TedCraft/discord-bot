@@ -227,7 +227,7 @@ async function nowPlaying(message, serverQueue) {
             break;
         }
     }
-    str += `\`${curTime} / ${lenTime}\``
+    str += `${curTime} / ${lenTime}`
     embed.setDescription(str);
 
     embed.setFooter(`от ${serverQueue.songs[0].user}`);
