@@ -3,7 +3,7 @@ const { Collection } = require('discord.js');
 
 client.commands = new Collection();
 
-client.queue = new Map();
+//client.queue = new Map();
 
 console.log(`Loading events...`);
 

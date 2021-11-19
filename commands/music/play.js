@@ -9,8 +9,14 @@ module.exports = {
     aliases: ['p'],
     utilisation: '{prefix}play [song name/URL/playlist URL]',
     voice: true,
+
+    async execute(client, message, args) {
+        Firebird.attach(client.dbOptions, function (err, db) {
+            
+        });
+    },
     
-    async execute(message, serverQueue, queue, count = 1, url = true, file_name = ""){
+    async execute2(client, message, args) {
         const voiceChannel = message.member.voice.channel;
         if (!voiceChannel) return message.channel.send(`${message.author} зайди в войс канал`);
         const permissions = voiceChannel.permissionsFor(message.client.user);
@@ -18,7 +24,7 @@ module.exports = {
             return message.channel.send('Дайте права :)');
         }
         if (count > 100) count = 100;
-    
+
         let playlist = [];
         const song = {
             title: null,
@@ -27,11 +33,11 @@ module.exports = {
             thumbnail: null,
             length: null
         }
-    
+
         if (url === true) {
             const args = message.content.split(' ');
             if (args[1] == undefined) return;
-    
+
             if (args[1].match(/^(http|https):\/\/(www\.)?(youtube.com|youtu.be)\/playlist/) != null) {
                 const pl = await ytpl(args[1]/*, { limit: Infinity }*/);
                 const plSongs = pl.items;
@@ -66,7 +72,7 @@ module.exports = {
                 song.length = duration;
             });
         }
-    
+
         if (!serverQueue) {
             const queueContruct = {
                 textChannel: message.channel,
@@ -76,7 +82,7 @@ module.exports = {
                 volume: 5,
                 playing: true,
             };
-    
+
             if (playlist.length === 0) {
                 for (let i = 0; i < count; i++) {
                     queueContruct.songs.push(song);
@@ -89,13 +95,13 @@ module.exports = {
                     });
                 }
             }
-    
+
             queue.set(message.guild.id, queueContruct);
-    
+
             try {
                 var connection = await voiceChannel.join();
                 queueContruct.connection = connection;
-    
+
                 if (playlist.length === 0) {
                     if (url === true) {
                         count == 1 ?
@@ -113,7 +119,7 @@ module.exports = {
                         message.channel.send(`\`${song.title.replace(/_/gi, " ")}\` добавлена в очередь`) :
                         message.channel.send(`\`${song.title.replace(/_/gi, " ")}\` добавлена в очередь (${count})`);
                 }*/
-    
+
                 play(message.guild, queueContruct.songs[0], queue);
             } catch (err) {
                 console.log(err);
