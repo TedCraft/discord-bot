@@ -1,9 +1,24 @@
 const { readdirSync } = require('fs');
 const { Collection } = require('discord.js');
+var path = require("path");
 
 client.commands = new Collection();
 
 //client.queue = new Map();
+
+client.connections = new Map();
+
+client.dbOptions = {
+    host: '127.0.0.1',
+    port: 3050,
+    database: path.resolve('./database/DISCORD-BOT.FDB'),
+    user: 'sysdba',
+    password: 'masterkey',
+    lowercase_keys: false,
+    role: null,
+    pageSize: 4096,
+    retryConnectionInterval: 1000
+};
 
 console.log(`Loading events...`);
 
@@ -26,7 +41,7 @@ for (const file of administrationEvents) {
 };
 
 console.log(`-> Loaded event BDay`);
-const {bday} = require('../bday/bday')
+const { bday } = require('../bday/bday')
 bday(client);
 
 console.log(`Loading commands...`);
@@ -35,9 +50,14 @@ readdirSync('./commands').forEach(dirs => {
     const commands = readdirSync(`./commands/${dirs}`).filter(files => files.endsWith('.js'));
 
     for (const file of commands) {
-        const command = require(`../commands/${dirs}/${file}`);
-        console.log(`-> Loaded command ${command.name.toLowerCase()}`);
-        client.commands.set(command.name.toLowerCase(), command);
-        delete require.cache[require.resolve(`../commands/${dirs}/${file}`)];
+        try {
+            const command = require(`../commands/${dirs}/${file}`);
+            console.log(`-> Loaded command ${command.name.toLowerCase()}`);
+            client.commands.set(command.name.toLowerCase(), command);
+            delete require.cache[require.resolve(`../commands/${dirs}/${file}`)];
+        }
+        catch (exception) {
+            console.log(exception);
+        }
     };
 });

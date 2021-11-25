@@ -1,14 +1,14 @@
 module.exports = {
     name: 'copy',
     aliases: ['c'],
-    utilisation: '{prefix}copy [track number]',
+    utilisation: '{prefix}copy [track number] [count]',
     voice: true,
     
     async execute(message, serverQueue) {
         if (!serverQueue) return message.channel.send(`Очередь пуста`);
         const args = message.content.split(" ");
-        if (args.length == 1) return message.channel.send("Введите номер трека в очереди");
-        else if (args.length == 2) return message.channel.send("Введите количество дубликатов");
+        if (args.length == 0) return message.channel.send("Введите номер трека в очереди");
+        else if (args.length == 1) return message.channel.send("Введите количество дубликатов");
     
         let index = 0;
         if (args[1].toLowerCase() == "last" || args[1].toLowerCase() == "l") index = serverQueue.songs.length - 1;

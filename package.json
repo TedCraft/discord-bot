@@ -25,6 +25,7 @@
     "lzma-native": "^7.0.1",
     "node-fetch": "^2.6.1",
     "node-firebird": "^1.0.0",
+    "node-firebird-driver-native": "^2.3.0",
     "npm": "^7.6.3",
     "prism-media": "^1.2.9",
     "request": "^2.88.2",

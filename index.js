@@ -13,8 +13,6 @@ global.client = new Client({
 
 client.config = require('./config');
 
-//global.player = new Player(client);
-
 require('./src/load');
 
 client.login(client.config.app.token);
