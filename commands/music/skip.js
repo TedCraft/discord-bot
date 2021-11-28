@@ -10,7 +10,7 @@ module.exports = {
         const voiceChannel = message.guild.me.voice.channel != undefined ? message.guild.me.voice.channel : message.member.voice.channel;
         if (!voiceChannel) return message.channel.send(`${message.author} зайди в войс канал`);
         const serverQueue = await getAllSongs(client, message.guild.id);
-        if (serverQueue.length == 0) return message.channel.send(`В очереди пусто`);
+        if (serverQueue.length == 0) return message.channel.send(`${message.author} В очереди пусто`);
 
         let count = 1;
         if (args[0] === "all") count = serverQueue.length;

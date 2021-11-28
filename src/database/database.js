@@ -45,7 +45,7 @@ module.exports = {
         });
     },
 
-    insertMusic(client, serverId, title, url, requestUser, thumbnailUrl, length, channelId) {
+    insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, channelId) {
         return new Promise(resolve => {
             client.db.query(`INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, CHANNEL_ID) 
                           VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', '${thumbnailUrl}', ${length}, '${channelId}');`,

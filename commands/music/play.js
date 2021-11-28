@@ -3,7 +3,7 @@ const ytsr = require('ytsr');
 const ytpl = require('ytpl');
 const { getAudioDurationInSeconds } = require('get-audio-duration');
 const async = require('async');
-const { insertMusic, deleteSongs, getSongs } = require('../../src/database/database');
+const { insertSong, deleteSongs, getSongs } = require('../../src/database/database');
 
 module.exports = {
     name: 'play',
@@ -82,7 +82,7 @@ async function getSong(url, message, voiceChannelId, count = 1) {
     song.length = songInfo.videoDetails.lengthSeconds;
 
     for (var i = 0; i < count; i++) {
-        await insertMusic(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
+        await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
     }
     return song;
 }
@@ -101,7 +101,7 @@ async function getSongPL(songInfo, message, voiceChannelId) {
     song.thumbnail = songInfo.bestThumbnail.url;
     song.length = songInfo.durationSec;
 
-    await insertMusic(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
+    await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
     return song;
 }
 

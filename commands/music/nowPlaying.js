@@ -10,7 +10,7 @@ module.exports = {
 
     async execute(client, message, args) {
         const serverQueue = await getSongs(client, message.guild.id);
-        if (serverQueue.length == 0) return message.channel.send(`В очереди пусто`);
+        if (serverQueue.length == 0) return message.channel.send(`${message.author} В очереди пусто`);
 
         const embed = new MessageEmbed();
         embed.setColor('RED');

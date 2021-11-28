@@ -4,8 +4,6 @@ var path = require("path");
 
 client.commands = new Collection();
 
-//client.queue = new Map();
-
 client.connections = new Map();
 
 client.dbOptions = {
