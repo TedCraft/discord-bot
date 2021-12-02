@@ -3,7 +3,6 @@ const { deleteSongs, getAllSongs } = require('../../src/database/database');
 module.exports = {
     name: 'disconnect',
     aliases: ['d'],
-    utilisation: '{prefix}disconnect',
     voice: true,
     
     async execute(client, message, args) {

@@ -1,4 +1,3 @@
-const { Player } = require('discord-player');
 const { Client, Intents } = require('discord.js');
 
 global.client = new Client({
@@ -8,7 +7,8 @@ global.client = new Client({
         Intents.FLAGS.GUILD_MESSAGES,
         Intents.FLAGS.GUILD_VOICE_STATES
     ],
-    disableMentions: 'everyone'
+    disableMentions: 'everyone',
+    fetchAllMembers: true
 });
 
 client.config = require('./config');

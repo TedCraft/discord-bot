@@ -3,9 +3,8 @@ const { getSongs } = require('../../src/database/database');
 const { MessageEmbed } = require('discord.js');
 
 module.exports = {
-    name: 'nowPlaying',
+    name: 'nowplaying',
     aliases: ['np'],
-    utilisation: '{prefix}nowPlaying',
     voice: true,
 
     async execute(client, message, args) {

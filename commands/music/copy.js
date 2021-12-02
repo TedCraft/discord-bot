@@ -3,7 +3,6 @@ const { insertSong, getAllSongs } = require('../../src/database/database');
 module.exports = {
     name: 'copy',
     aliases: ['c'],
-    utilisation: '{prefix}copy [track number] [count]',
     voice: true,
 
     async execute(client, message, args) {

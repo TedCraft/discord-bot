@@ -3,7 +3,6 @@ const {getRandomInRange} = require('../../src/utility/random');
 module.exports = {
     name: 'roll',
     aliases: [],
-    utilisation: '{prefix}roll [from, to]',
     voice: false,
     
     async execute(client, message, args) {

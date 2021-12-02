@@ -4,7 +4,6 @@ const { MessageAttachment } = require('discord.js');
 module.exports = {
     name: 'кирилл',
     aliases: ['торч', 'друг', 'брух', 'bruh'],
-    utilisation: '{prefix}кирилл',
     voice: false,
     
     async execute(client, message) {

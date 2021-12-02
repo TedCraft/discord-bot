@@ -3,7 +3,6 @@ const { deleteSongs, getAllSongs } = require('../../src/database/database');
 module.exports = {
     name: 'skip',
     aliases: ['s'],
-    utilisation: '{prefix}skip',
     voice: true,
 
     async execute(client, message, args) {

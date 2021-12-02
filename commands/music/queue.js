@@ -3,7 +3,6 @@ const {msToTime, sToTime} = require('../../src/utility/time');
 module.exports = {
     name: 'queue',
     aliases: ['q'],
-    utilisation: '{prefix}queue',
     voice: true,
     
     async execute(message, serverQueue) {

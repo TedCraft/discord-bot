@@ -34,7 +34,7 @@ const administrationEvents = readdirSync('./events/administration/').filter(file
 for (const file of administrationEvents) {
     const event = require(`../events/administration/${file}`);
     console.log(`-> Loaded event ${file.split('.')[0]}`);
-    client.on(file.split('.')[0], event);
+    client.on(file.split('.')[0], event.bind(null, client));
     delete require.cache[require.resolve(`../events/administration/${file}`)];
 };
 

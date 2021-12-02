@@ -8,7 +8,6 @@ const { insertSong, deleteSongs, getSongs } = require('../../src/database/databa
 module.exports = {
     name: 'play',
     aliases: ['p'],
-    utilisation: '{prefix}play [song name/URL/playlist URL]',
     voice: true,
 
     async execute(client, message, args) {
@@ -18,7 +17,7 @@ module.exports = {
         const permissions = voiceChannel.permissionsFor(message.client.user);
         if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) return message.channel.send('Дайте права :)');
 
-        const count = !isNaN(parseInt(args[1])) ? args[1] : 1;
+        let count = !isNaN(parseInt(args[1])) ? args[1] : 1;
         if (count > 100) count = 100;
 
         let song = [];
@@ -28,11 +27,11 @@ module.exports = {
         if (args[0].match(/^(http|https):\/\/(www\.)?(youtube.com|youtu.be)\/playlist/) != null) {
             const pl = await ytpl(args[0], { limit: Infinity });
             const plSongs = pl.items;
-            song = await getSongPL(plSongs[0], message, voiceChannel.id);
+            song = await getSongFromInfo(plSongs[0], message, voiceChannel.id);
             plSongs.shift();
 
             for (const i in plSongs) {
-                await getSongPL(plSongs[i], message, voiceChannel.id);
+                await getSongFromInfo(plSongs[i], message, voiceChannel.id);
             }
 
             if (!client.connections.get(message.guild.id)) {
@@ -48,11 +47,12 @@ module.exports = {
         }
         else {
             let str = "";
-            for (let i = args[0].length + 1; i < message.content.length; i++) {
-                str += message.content[i];
+            for (const i in args) {
+                str += args[i] + " ";
             }
+            str = str.slice(0, -1);
             const searchResult = await ytsr(str, { limit: 1 });
-            song = await getSong(searchResult.items[0].url, message, voiceChannel.id, count);
+            song = await getSongFromInfo(searchResult.items[0], message, voiceChannel.id);
         }
 
         if (!client.connections.get(message.guild.id)) {
@@ -60,7 +60,7 @@ module.exports = {
             client.connections.set(message.guild.id, connection);
             play(client, message.guild, song)
         }
-        count == 1 ?
+        count == 1 && !isNaN(parseInt(count)) ?
             message.channel.send(`\`${song.title}\` добавлена в очередь`) :
             message.channel.send(`\`${song.title}\` добавлена в очередь (${count})`);
     }
@@ -87,7 +87,7 @@ async function getSong(url, message, voiceChannelId, count = 1) {
     return song;
 }
 
-async function getSongPL(songInfo, message, voiceChannelId) {
+async function getSongFromInfo(songInfo, message, voiceChannelId) {
     const song = {
         title: null,
         url: null,
@@ -99,7 +99,16 @@ async function getSongPL(songInfo, message, voiceChannelId) {
     song.title = songInfo.title;
     song.url = songInfo.url;
     song.thumbnail = songInfo.bestThumbnail.url;
-    song.length = songInfo.durationSec;
+    if (songInfo.durationSec != undefined) {
+        song.length = songInfo.durationSec;
+    }
+    else {
+        const duration = songInfo.duration.split(/:+/g).reverse();
+        song.length = 0;
+        for (const i in duration) {
+            song.length += parseInt(duration[i]) * Math.pow(60, i);
+        }
+    }
 
     await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
     return song;
