@@ -1,8 +1,6 @@
 const ytdl = require('discord-ytdl-core');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
-const { getAudioDurationInSeconds } = require('get-audio-duration');
-const async = require('async');
 const { insertSong, deleteSongs, getSongs } = require('../../src/database/database');
 
 module.exports = {
