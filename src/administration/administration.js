@@ -9,6 +9,16 @@ module.exports = {
         return false;
     },
 
+    async checkBadWordsRelative(client, guildId, args) {
+        const badWords = await getBadWords(client, guildId);
+        for (const i in args) {
+            for (const j in badWords) {
+                if (args[i].includes(badWords[j])) return true;
+            }
+        }
+        return false;
+    },
+
     async checkBadWordsStroke(client, guildId, str) {
         var args = str.trim().split(/ +/g);
         const badWords = await getBadWords(client, guildId);

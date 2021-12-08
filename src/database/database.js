@@ -126,6 +126,24 @@ module.exports = {
         });
     },
     
+    getUserServers(client, userId) {
+        return new Promise(resolve => {
+            const dbServerListTemp = [];
+            client.db.query(`SELECT * FROM SERVER_USERS
+                            WHERE USER_ID='${userId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+
+                for (const id in result) {
+                    dbServerListTemp.push(result[id].SERVER_ID.toString('utf8'));
+                }
+                resolve(dbServerListTemp);
+            });
+        });
+    },
+    
     insertServerUser(client, serverId, userId, messageCount = 0) {
         return new Promise(resolve => {
             client.db.query(`INSERT INTO SERVER_USERS(SERVER_ID, USER_ID, SERVER_MESSAGE_COUNT) 

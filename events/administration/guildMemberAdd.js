@@ -1,4 +1,4 @@
-module.exports = (user) => {
+module.exports = async (user) => {
     if (user.user.username[0] === "!") {
         var temp = 0;
         for (i = 0; i < user.user.username.length; i++) {
