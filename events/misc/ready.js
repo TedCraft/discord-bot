@@ -1,16 +1,23 @@
-const { getServersId, insertServer, deleteServer, 
-        connectToDatabase, 
-        getUsersId, insertUser, deleteUser, 
-        getServerUsers, insertServerUser } = require('../../src/database/database');
+const { getServersId, insertServer, deleteServer,
+    connectToDatabase,
+    getUsersId, insertUser, deleteUser,
+    getServerUsers, insertServerUser } = require('../../src/database/database');
+
+const { checkBirthDays } = require('../../src/administration/administration');
+
+const { scheduleJob } = require("node-schedule");
 
 module.exports = async (client) => {
     console.log(`Logged to the client ${client.user.username}\n-> Ready on ${client.guilds.cache.size} servers for a total of ${client.users.cache.size} users`);
     client.user.setActivity(client.config.app.activity);
 
-    console.log(`Check database...`);
+    console.log(`\nCheck database...`);
     client.db = await connectToDatabase(client);
     await checkDatabase(client);
     console.log(`Database check successful!`);
+
+    checkBirthDays(client);
+    scheduleJob('0 0 * * *', () => { checkBirthDays(client) });
 };
 
 async function checkDatabase(client) {
@@ -25,17 +32,17 @@ async function checkDatabase(client) {
     for (const i in dbServersIDList) {
         if (!serverIDList.includes(dbServersIDList[i])) {
             try {
-            await deleteServer(client, dbServersIDList[i]);
+                await deleteServer(client, dbServersIDList[i]);
             }
-            catch(ex) {
+            catch (ex) {
                 console.log(ex);
             }
         }
     }
-    
+
     const serverList = client.guilds.cache.map(guild => guild);
     const dbUsersIDList = await getUsersId(client);
-    for(const i in serverList) {
+    for (const i in serverList) {
         const usersIdList = serverList[i].members.cache.filter(member => !member.user.bot).map(member => member.id);
         const dbServerUsers = await getServerUsers(client, serverList[i].id);
         for (const j in usersIdList) {

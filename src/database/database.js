@@ -30,11 +30,64 @@ module.exports = {
             });
         });
     },
+    
+    updateBirthDayRole(client, serverID, roleID) {
+        return new Promise(resolve => {
+            const dbServerListTemp = [];
+            client.db.query(`UPDATE SERVER
+                            SET BIRTHDAY_ROLE=${roleID}
+                            WHERE SERVER_ID=${serverID};`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+
+                for (const id in result) {
+                    dbServerListTemp.push(result[id].SERVER_ID.toString('utf8'));
+                }
+                resolve(dbServerListTemp);
+            });
+        });
+    },
+    
+    getUserBDAYServers(client, userID) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM SERVER_USERS 
+                            JOIN SERVER ON SERVER_USERS.SERVER_ID=SERVER.SERVER_ID
+                            WHERE USER_ID = ${userID}
+                            AND BIRTHDAY_ROLE IS NOT NULL;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
 
     getUsersId(client) {
         return new Promise(resolve => {
             const dbServerListTemp = [];
             client.db.query('SELECT * FROM USER_T;', function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+
+                for (const id in result) {
+                    dbServerListTemp.push(result[id].USER_ID.toString('utf8'));
+                }
+                resolve(dbServerListTemp);
+            });
+        });
+    },
+    
+    getUsersBDAYId(client, date = new Date()) {
+        return new Promise(resolve => {
+            const dbServerListTemp = [];
+            client.db.query(`SELECT * FROM USER_T
+                            WHERE EXTRACT(DAY FROM BIRTHDAY)=${date.getDate()}
+                            AND EXTRACT(MONTH FROM BIRTHDAY)=${date.getMonth()+1};`, function (err, result) {
                 if (err) {
                     console.log(err);
                     reject(err);
@@ -65,11 +118,12 @@ module.exports = {
         });
     },
 
-    insertUser(client, userId, messageCount = 0, birthday = null) {
+    insertUser(client, userId, messageCount = 0, birthday = null, lastChange = null) {
         return new Promise(resolve => {
             if (birthday != null) birthday = "'" + birthday + "'";
-            client.db.query(`INSERT INTO USER_T(USER_ID, MESSAGE_COUNT, BIRTHDAY) 
-                          VALUES('${userId}', ${messageCount}, ${birthday});`,
+            if (lastChange != null) lastChange = "'" + birthday + "'";
+            client.db.query(`INSERT INTO USER_T(USER_ID, MESSAGE_COUNT, BIRTHDAY, LAST_CHANGE_BDAY) 
+                          VALUES('${userId}', ${messageCount}, ${birthday}, ${lastChange});`,
                 function (err, result) {
                     if (err) {
                         console.log(err);

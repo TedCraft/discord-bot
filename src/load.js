@@ -38,10 +38,6 @@ for (const file of administrationEvents) {
     delete require.cache[require.resolve(`../events/administration/${file}`)];
 };
 
-console.log(`-> Loaded event BDay`);
-const { bday } = require('../bday/bday')
-bday(client);
-
 console.log(`Loading commands...`);
 
 readdirSync('./commands').forEach(dirs => {
