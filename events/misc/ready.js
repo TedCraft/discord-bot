@@ -8,7 +8,7 @@ const { checkBirthDays } = require('../../src/administration/administration');
 const { scheduleJob } = require("node-schedule");
 
 module.exports = async (client) => {
-    console.log(`Logged to the client ${client.user.username}\n-> Ready on ${client.guilds.cache.size} servers for a total of ${client.users.cache.size} users`);
+    console.log(`\nLogged to the client ${client.user.username}\n-> Ready on ${client.guilds.cache.size} servers for a total of ${client.users.cache.size} users`);
     client.user.setActivity(client.config.app.activity);
 
     console.log(`\nCheck database...`);
@@ -48,9 +48,11 @@ async function checkDatabase(client) {
         for (const j in usersIdList) {
             if (!dbUsersIDList.includes(usersIdList[j])) {
                 await insertUser(client, usersIdList[j]);
+                dbUsersIDList.push(usersIdList[j]);
             }
             if (!dbServerUsers.includes(usersIdList[j])) {
-                await insertServerUser(client, serverList[i].id, usersIdList[j]);
+                    await insertServerUser(client, serverList[i].id, usersIdList[j]);
+                    dbServerUsers.push(usersIdList[j]);
             }
         }
     }

@@ -39,6 +39,7 @@ module.exports = {
     async checkBirthDays(client) {
         const date = new Date();
         const dateString = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`
+        
         console.log(`\n${dateString} Check birthdays...`);
         const usersID = await getUsersBDAYId(client);
         for(const i in usersID) {
@@ -47,11 +48,23 @@ module.exports = {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
                 const member = guild.members.cache.get(usersID[i]);
-                member.roles.add(role).catch(console.error);
+                member.roles.add(role);
                 console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`)
             }
         }
-        console.log(`${dateString} Checking birthdays successfull!`);
+        
+        const usersOldID = await getUsersBDAYId(client, new Date(`${date.getMonth()+1}.${date.getDate()-1}`))
+        for(const i in usersOldID) {
+            const serversID = await getUserBDAYServers(client, usersOldID[i]);
+            for (const j in serversID) {
+                const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
+                const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
+                const member = guild.members.cache.get(usersOldID[i]);
+                member.roles.remove(role);
+                console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`)
+            }
+        }
+        console.log(`${dateString} Birthdays check successfull!`);
     },
 };
 

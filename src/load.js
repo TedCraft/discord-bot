@@ -38,7 +38,7 @@ for (const file of administrationEvents) {
     delete require.cache[require.resolve(`../events/administration/${file}`)];
 };
 
-console.log(`Loading commands...`);
+console.log(`\nLoading commands...`);
 
 readdirSync('./commands').forEach(dirs => {
     const commands = readdirSync(`./commands/${dirs}`).filter(files => files.endsWith('.js'));

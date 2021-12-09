@@ -22,7 +22,7 @@ module.exports = async (client, message) => {
 };
 
 async function checkMessage(client, message, prefix) {
-    const args = message.content.trim().split(/ +/g);
+    const args = message.content.toLowerCase().trim().split(/ +/g);
     if (args[0].slice(prefix.length).toLowerCase() != "deletebw" && args[0].slice(prefix.length).toLowerCase() != "delbw") {
         if (await checkBadWordsRelative(client, message.guild.id, args)) {
             message.channel.send(`${message.author} Сообщение содержит запрещённое слово!`);

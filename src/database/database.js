@@ -82,6 +82,19 @@ module.exports = {
         });
     },
     
+    getUser(client, userID) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM USER_T
+                            WHERE USER_ID=${userID};`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
     getUsersBDAYId(client, date = new Date()) {
         return new Promise(resolve => {
             const dbServerListTemp = [];
@@ -133,11 +146,43 @@ module.exports = {
                 });
         });
     },
+    
+    updateBirthdayUser(client, userId, birthday) {
+        return new Promise(resolve => {
+            const date = new Date();
+            client.db.query(`UPDATE USER_T
+                            SET BIRTHDAY='${birthday}',
+                                LAST_CHANGE_BDAY='${date.getDate()}.${date.getMonth()}.${date.getFullYear()}'
+                            WHERE USER_ID=${userId};`,
+                function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+                    resolve(result);
+                });
+        });
+    },
 
     deleteServer(client, serverId) {
         return new Promise(resolve => {
             client.db.query(`DELETE FROM SERVER
                           WHERE SERVER_ID='${serverId}'`,
+                function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+                    resolve(result);
+                });
+        });
+    },
+    
+    deleteServerBdayRole(client, serverID) {
+        return new Promise(resolve => {
+            client.db.query(`UPDATE SERVER
+                            SET BIRTHDAY_ROLE=NULL
+                            WHERE SERVER_ID=${serverID};`,
                 function (err, result) {
                     if (err) {
                         console.log(err);
