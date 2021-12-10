@@ -6,6 +6,8 @@ module.exports = async (client, user_old, user_new) => {
     for(const i in dbUserServers) {
         const guild = client.guilds.cache.get(dbUserServers[i]);
         const member = guild.members.cache.get(user_new.id);
+        if(!member.manageable) return;
+        
         if(member.nickname == null) {
             newNick = await checkBadWordsStroke(client, guild.id, user_new.username);
             if (newNick != user_new.username) member.setNickname(newNick);

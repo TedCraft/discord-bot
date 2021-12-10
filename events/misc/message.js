@@ -1,4 +1,5 @@
 const { checkBadWordsRelative } = require('../../src/administration/administration');
+const { replaceWith } = require('../../src/utility/string');
 
 module.exports = async (client, message) => {
     if (message.author.bot || message.channel.type === 'dm') return;
@@ -24,8 +25,9 @@ module.exports = async (client, message) => {
 async function checkMessage(client, message, prefix) {
     const args = message.content.toLowerCase().trim().split(/ +/g);
     if (args[0].slice(prefix.length).toLowerCase() != "deletebw" && args[0].slice(prefix.length).toLowerCase() != "delbw") {
-        if (await checkBadWordsRelative(client, message.guild.id, args)) {
-            message.channel.send(`${message.author} Сообщение содержит запрещённое слово!`);
+        const badWord = await checkBadWordsRelative(client, message.guild.id, args)
+        if (badWord != undefined) {
+            message.author.send(`Слово \`${replaceWith(badWord, 2, "*".repeat(badWord.length - 2))}\` на сервере ${message.guild.name} запрещено!`);
             message.delete();
             return true;
         }

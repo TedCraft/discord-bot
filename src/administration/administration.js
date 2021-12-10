@@ -1,4 +1,5 @@
 const { getBadWords, getUsersBDAYId, getUserBDAYServers } = require('../database/database');
+const { replaceWith } = require('../utility/string');
 
 module.exports = {
     async checkBadWordsAbsolute(client, guildId, args) {
@@ -13,10 +14,10 @@ module.exports = {
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             for (const j in badWords) {
-                if (args[i].includes(badWords[j])) return true;
+                if (args[i].includes(badWords[j])) return badWords[j];
             }
         }
-        return false;
+        return undefined;
     },
 
     async checkBadWordsStroke(client, guildId, str) {
@@ -35,39 +36,40 @@ module.exports = {
         newStr = newStr.slice(0, -1);
         return newStr;
     },
-    
+
     async checkBirthDays(client) {
         const date = new Date();
-        const dateString = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`
-        
+        const dateString = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
+
         console.log(`\n${dateString} Check birthdays...`);
         const usersID = await getUsersBDAYId(client);
-        for(const i in usersID) {
+        for (const i in usersID) {
             const serversID = await getUserBDAYServers(client, usersID[i]);
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
                 const member = guild.members.cache.get(usersID[i]);
-                member.roles.add(role);
-                console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`)
+                if (!member.roles.cache.has(role.id)) {
+                    member.roles.add(role);
+                    console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`);
+                    member.user.send('С днём рождения! :partying_face:');
+                }
             }
         }
-        
-        const usersOldID = await getUsersBDAYId(client, new Date(`${date.getMonth()+1}.${date.getDate()-1}`))
-        for(const i in usersOldID) {
+
+        const usersOldID = await getUsersBDAYId(client, new Date(`${date.getMonth() + 1}.${date.getDate() - 1}`))
+        for (const i in usersOldID) {
             const serversID = await getUserBDAYServers(client, usersOldID[i]);
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
                 const member = guild.members.cache.get(usersOldID[i]);
-                member.roles.remove(role);
-                console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`)
+                if (member.roles.cache.has(role.id)) {
+                    member.roles.remove(role);
+                    console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`);
+                }
             }
         }
         console.log(`${dateString} Birthdays check successfull!`);
     },
 };
-
-function replaceWith(str, index, replacement) {
-    return str.substr(0, index) + replacement + str.substr(index + replacement.length);
-}
