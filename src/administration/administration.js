@@ -1,6 +1,7 @@
 const { getBadWords, getUsersBDAYId, getUserBDAYServers, getServerCommands } = require('../database/database');
 const { createCanvas, loadImage } = require('canvas');
 const { MessageAttachment } = require('discord.js');
+const { replaceWith } = require('../utility/string');
 
 module.exports = {
     async checkBadWordsAbsolute(client, guildId, args) {
@@ -15,10 +16,10 @@ module.exports = {
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             for (const j in badWords) {
-                if (args[i].includes(badWords[j])) return true;
+                if (args[i].includes(badWords[j])) return badWords[j];
             }
         }
-        return false;
+        return undefined;
     },
 
     async checkBadWordsStroke(client, guildId, str) {
@@ -50,8 +51,11 @@ module.exports = {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
                 const member = guild.members.cache.get(usersID[i]);
-                member.roles.add(role);
-                console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`)
+                if (!member.roles.cache.has(role.id)) {
+                    member.roles.add(role);
+                    console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`);
+                    member.user.send('С днём рождения! :partying_face:');
+                }
             }
         }
 
@@ -62,8 +66,10 @@ module.exports = {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
                 const member = guild.members.cache.get(usersOldID[i]);
-                member.roles.remove(role);
-                console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`)
+                if (member.roles.cache.has(role.id)) {
+                    member.roles.remove(role);
+                    console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`);
+                }
             }
         }
         console.log(`${dateString} Birthdays check successfull!`);
@@ -100,7 +106,3 @@ module.exports = {
         }
     },
 };
-
-function replaceWith(str, index, replacement) {
-    return str.substr(0, index) + replacement + str.substr(index + replacement.length);
-}

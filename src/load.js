@@ -20,23 +20,15 @@ client.dbOptions = {
 
 console.log(`Loading events...`);
 
-const miscEvents = readdirSync('./events/misc/').filter(file => file.endsWith('.js'));
-
-for (const file of miscEvents) {
-    const event = require(`../events/misc/${file}`);
-    console.log(`-> Loaded event ${file.split('.')[0]}`);
-    client.on(file.split('.')[0], event.bind(null, client));
-    delete require.cache[require.resolve(`../events/misc/${file}`)];
-};
-
-const administrationEvents = readdirSync('./events/administration/').filter(file => file.endsWith('.js'));
-
-for (const file of administrationEvents) {
-    const event = require(`../events/administration/${file}`);
-    console.log(`-> Loaded event ${file.split('.')[0]}`);
-    client.on(file.split('.')[0], event.bind(null, client));
-    delete require.cache[require.resolve(`../events/administration/${file}`)];
-};
+readdirSync('./events').forEach(dirs => {
+    const events = readdirSync(`./events/${dirs}`).filter(files => files.endsWith('.js'));
+    for (const file of events) {
+        const event = require(`../events/${dirs}/${file}`);
+        console.log(`-> Loaded event ${file.split('.')[0]}`);
+        client.on(file.split('.')[0], event.bind(null, client));
+        delete require.cache[require.resolve(`../events/${dirs}/${file}`)];
+    };
+});
 
 console.log(`\nLoading commands...`);
 
