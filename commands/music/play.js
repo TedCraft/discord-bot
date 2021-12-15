@@ -22,7 +22,7 @@ module.exports = {
 
         if (args[0] == undefined) return;
 
-        if (args[0].match(/^(http|https):\/\/(www\.)?(youtube.com|youtu.be)\/playlist/) != null) {
+        if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/playlist\?list=)([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
             const pl = await ytpl(args[0], { limit: Infinity });
             const plSongs = pl.items;
             song = await getSongFromInfo(plSongs[0], message, voiceChannel.id);
@@ -40,7 +40,7 @@ module.exports = {
             message.channel.send(`Плейлист \`${pl.title}\` добавлен в очередь`);
             return;
         }
-        else if (args[0].match(/^(http|https):\/\/(www\.)?(youtube.com|youtu.be)/) != null) {
+        else if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
             song = await getSong(args[0], message, voiceChannel.id, count);
         }
         else {
@@ -49,8 +49,16 @@ module.exports = {
                 str += args[i] + " ";
             }
             str = str.slice(0, -1);
-            const searchResult = await ytsr(str, { limit: 1 });
-            song = await getSongFromInfo(searchResult.items[0], message, voiceChannel.id);
+            const searchResult = await ytsr(str, { limit: 5 });
+            if (searchResult.items.length == 0) {
+                message.channel.send("Не удалось найти композицию!");
+                return;
+            }
+            for(const i in searchResult.items) {
+                if(searchResult.items[i].isLive) continue;
+                song = await getSongFromInfo(searchResult.items[i], message, voiceChannel.id);
+                break;
+            }
         }
 
         if (!client.connections.get(message.guild.id)) {
@@ -74,6 +82,8 @@ async function getSong(url, message, voiceChannelId, count = 1) {
     }
 
     const songInfo = await ytdl.getBasicInfo(url);
+    if(songInfo.isLive) throw "Streams not allowed!";
+    
     song.title = songInfo.videoDetails.title;
     song.url = songInfo.videoDetails.video_url;
     song.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
@@ -86,6 +96,7 @@ async function getSong(url, message, voiceChannelId, count = 1) {
 }
 
 async function getSongFromInfo(songInfo, message, voiceChannelId) {
+    if(songInfo.isLive) throw "Streams not allowed!";
     const song = {
         title: null,
         url: null,

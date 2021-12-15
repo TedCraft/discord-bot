@@ -1,4 +1,4 @@
-const { checkBadWordsRelative } = require('../../src/administration/administration');
+const { checkBadWordsRelative, checkCustomCommands, executeCustomCommands } = require('../../src/administration/administration');
 
 module.exports = async (client, message) => {
     if (message.author.bot || message.channel.type === 'dm') return;
@@ -15,6 +15,15 @@ module.exports = async (client, message) => {
 
     if (cmd) {
         cmd.execute(client, message, args).catch(err => {
+            message.channel.send("Отказано");
+            console.log(err);
+        });
+        return;
+    }
+    
+    const customCmd = await checkCustomCommands(client, message.guild.id, command);
+    if (customCmd) {
+        executeCustomCommands(client, message, customCmd).catch(err => {
             message.channel.send("Отказано");
             console.log(err);
         });

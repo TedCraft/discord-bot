@@ -30,7 +30,7 @@ module.exports = {
             });
         });
     },
-    
+
     updateBirthDayRole(client, serverID, roleID) {
         return new Promise(resolve => {
             const dbServerListTemp = [];
@@ -49,7 +49,7 @@ module.exports = {
             });
         });
     },
-    
+
     getUserBDAYServers(client, userID) {
         return new Promise(resolve => {
             client.db.query(`SELECT * FROM SERVER_USERS 
@@ -81,7 +81,7 @@ module.exports = {
             });
         });
     },
-    
+
     getUser(client, userID) {
         return new Promise(resolve => {
             client.db.query(`SELECT * FROM USER_T
@@ -94,13 +94,13 @@ module.exports = {
             });
         });
     },
-    
+
     getUsersBDAYId(client, date = new Date()) {
         return new Promise(resolve => {
             const dbServerListTemp = [];
             client.db.query(`SELECT * FROM USER_T
                             WHERE EXTRACT(DAY FROM BIRTHDAY)=${date.getDate()}
-                            AND EXTRACT(MONTH FROM BIRTHDAY)=${date.getMonth()+1};`, function (err, result) {
+                            AND EXTRACT(MONTH FROM BIRTHDAY)=${date.getMonth() + 1};`, function (err, result) {
                 if (err) {
                     console.log(err);
                     reject(err);
@@ -146,7 +146,7 @@ module.exports = {
                 });
         });
     },
-    
+
     updateBirthdayUser(client, userId, birthday) {
         return new Promise(resolve => {
             const date = new Date();
@@ -177,7 +177,7 @@ module.exports = {
                 });
         });
     },
-    
+
     deleteServerBdayRole(client, serverID) {
         return new Promise(resolve => {
             client.db.query(`UPDATE SERVER
@@ -224,7 +224,7 @@ module.exports = {
             });
         });
     },
-    
+
     getUserServers(client, userId) {
         return new Promise(resolve => {
             const dbServerListTemp = [];
@@ -242,7 +242,7 @@ module.exports = {
             });
         });
     },
-    
+
     insertServerUser(client, serverId, userId, messageCount = 0) {
         return new Promise(resolve => {
             client.db.query(`INSERT INTO SERVER_USERS(SERVER_ID, USER_ID, SERVER_MESSAGE_COUNT) 
@@ -370,6 +370,49 @@ module.exports = {
                     dbServerListTemp.push(result[id].WORD.toString('utf8'));
                 }
                 resolve(dbServerListTemp);
+            });
+        });
+    },
+
+    insertServerCommand(client, serverId, command, songUrl = null, imageUrl = null, text = null) {
+        return new Promise(resolve => {
+            if (command != null) command = command.replace(/\'/g, '\'\'');
+            if (text != null) text = text.replace(/\'/g, '\'\'');
+            client.db.query(`INSERT INTO COMMANDS(SERVER_ID, COMMAND, SONG_URL, IMAGE_URL, TEXT) 
+                            VALUES('${serverId}', '${command}', '${songUrl}', '${imageUrl}', '${text}');`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+
+    getServerCommand(client, serverId, command) {
+        return new Promise(resolve => {
+            if (command != null) command = command.replace(/\'/g, '\'\'');
+            client.db.query(`SELECT * FROM COMMANDS
+                          WHERE SERVER_ID='${serverId}'
+                          AND COMMAND='${command}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getServerCommands(client, serverId) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM COMMANDS
+                          WHERE SERVER_ID='${serverId}'`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
             });
         });
     },
