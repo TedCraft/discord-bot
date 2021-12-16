@@ -83,21 +83,21 @@ module.exports = {
     async executeCustomCommands(client, message, command) {
         var str;
         var image;
-        if (command.IMAGE_URL.toString('utf8') != "null") {
+        if (command.IMAGE_URL) {
             const img = await loadImage(command.IMAGE_URL.toString('utf8'));
             const canvas = createCanvas(img.width, img.height);
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, img.width, img.height);
             image = new MessageAttachment(canvas.createPNGStream());
         }
-        if (command.SONG_URL.toString('utf8') != "null") {
+        if (command.SONG_URL) {
             const cmd = client.commands.get("play");
             cmd.execute(client, message, [command.SONG_URL.toString('utf8')]).catch(err => {
                 message.channel.send("Отказано");
                 console.log(err);
             });
         }
-        if (command.TEXT.toString('utf8') != "null") {
+        if (command.TEXT) {
             str = command.TEXT.toString('utf8');
         }
         

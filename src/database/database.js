@@ -377,9 +377,11 @@ module.exports = {
     insertServerCommand(client, serverId, command, songUrl = null, imageUrl = null, text = null) {
         return new Promise(resolve => {
             if (command != null) command = command.replace(/\'/g, '\'\'');
-            if (text != null) text = text.replace(/\'/g, '\'\'');
+            if (text != null) text = "'" + text.replace(/\'/g, '\'\'') + "'";
+            if (songUrl != null) songUrl = "'" + songUrl + "'";
+            if (imageUrl != null) imageUrl = "'" + imageUrl + "'";
             client.db.query(`INSERT INTO COMMANDS(SERVER_ID, COMMAND, SONG_URL, IMAGE_URL, TEXT) 
-                            VALUES('${serverId}', '${command}', '${songUrl}', '${imageUrl}', '${text}');`, function (err, result) {
+                            VALUES('${serverId}', '${command}', ${songUrl}, ${imageUrl}, ${text});`, function (err, result) {
                 if (err) {
                     console.log(err);
                     reject(err);
