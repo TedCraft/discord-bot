@@ -1,5 +1,4 @@
 const { getBadWords, getUsersBDAYId, getUserBDAYServers, getServerCommands } = require('../database/database');
-const { createCanvas, loadImage } = require('canvas');
 const { MessageAttachment } = require('discord.js');
 const { replaceWith } = require('../utility/string');
 
@@ -84,11 +83,7 @@ module.exports = {
         var str;
         var image;
         if (command.IMAGE_URL) {
-            const img = await loadImage(command.IMAGE_URL.toString('utf8'));
-            const canvas = createCanvas(img.width, img.height);
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-            image = new MessageAttachment(canvas.createPNGStream());
+            image = new MessageAttachment(command.IMAGE_URL.toString('utf8'));
         }
         if (command.SONG_URL) {
             const cmd = client.commands.get("play");
