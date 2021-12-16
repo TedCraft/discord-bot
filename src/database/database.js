@@ -416,4 +416,20 @@ module.exports = {
             });
         });
     },
+    
+    deleteServerCommand(client, serverId, command) {
+        return new Promise(resolve => {
+            if (command != null) command = command.replace(/\'/g, '\'\'');
+            client.db.query(`DELETE FROM COMMANDS
+                          WHERE SERVER_ID='${serverId}'
+                          AND COMMAND='${command}'`,
+                function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+                    resolve(result);
+                });
+        });
+    },
 };
