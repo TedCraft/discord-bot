@@ -1,4 +1,4 @@
-const { deleteGamePlayer, deleteGame, deleteGamePlayers, deleteGameTowns, updateGameTurn, getGamePlayers, getGame } = require('../database/database');
+const { deleteGamePlayer, deleteGame, deleteGamePlayers, deleteGameTowns, updateGameTurn, getGamePlayers, getGame, getTownsGame } = require('../database/database');
 
 module.exports = {
     setTownTimeout(client, message) {
@@ -15,7 +15,7 @@ module.exports = {
                 await deleteGamePlayers(client, message.channel.id);
                 await deleteGameTowns(client, message.channel.id);
                 await deleteGame(client, message.channel.id);
-                return message.channel.send(`<@${gamePlayers[0].USER_ID.toString('utf8')}> Поздравляю, ты победили! :partying_face:`);
+                return message.channel.send(`<@${gamePlayers[0].USER_ID.toString('utf8')}> Поздравляю, вы победили! :partying_face:`);
             }
             
             const towns = await getTownsGame(client, message.channel.id);

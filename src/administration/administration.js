@@ -140,7 +140,7 @@ async function checkCorrectPlace(place) {
         const statements = ["city", "town", "village", "hamlet"];
         const cityStates = ["сингапур", "монако", "ватикан", "гибралтар", "гонконг", "макао", "мелилья", "сеута"];
         if (cityStates.includes(place)) resolve(place);
-        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=3`, { responseType: 'json' })
+        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=1`, { responseType: 'json' })
             .then(res => {
                 const json = res.body;
                 if (json.length == 0) resolve(undefined);
