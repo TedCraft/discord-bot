@@ -96,10 +96,11 @@ module.exports = {
         if (!place) return message.channel.send(`${message.author} Такого города нет!`);
 
         const towns = await getTownsGame(client, message.channel.id);
+        const letters = ["ь", "ъ", "ы"];
         if (towns.length > 0) {
             if (towns.includes(place)) return message.channel.send(`${message.author} Город ${place} уже был!`);
 
-            const letter = towns[towns.length - 1].slice(-1);
+            const letter = !letters.includes(towns[towns.length - 1].slice(-1)) ? towns[towns.length - 1].slice(-1) : towns[towns.length - 1].slice(-2, -1);
             if (place[0] != letter) return message.channel.send(`${message.author} Город должен начинаться с буквы ${letter}!`);
         }
 
@@ -108,7 +109,7 @@ module.exports = {
         const newTurn = game.TURN == gamePlayers.length ? 1 : game.TURN + 1;
         await updateGameTurn(client, message.channel.id, newTurn)
         setTownTimeout(client, message);
-        message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву ${place.slice(-1)}!`);
+        message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву ${!letters.includes(place.slice(-1)) ? place.slice(-1) : place.slice(-2, -1)}!`);
     },
 
     async executeCustomCommands(client, message, command) {
@@ -139,7 +140,7 @@ async function checkCorrectPlace(place) {
         const statements = ["city", "town", "village", "hamlet"];
         const cityStates = ["сингапур", "монако", "ватикан", "гибралтар", "гонконг", "макао", "мелилья", "сеута"];
         if (cityStates.includes(place)) resolve(place);
-        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=1`, { responseType: 'json' })
+        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=3`, { responseType: 'json' })
             .then(res => {
                 const json = res.body;
                 if (json.length == 0) resolve(undefined);

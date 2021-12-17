@@ -45,7 +45,7 @@ module.exports = {
                         await deleteGamePlayers(client, message.channel.id);
                         await deleteGame(client, message.channel.id);
                         client.timer.delete(message.channel.id);
-                    }, 2 * 60 * 1000));
+                    }, 1 * 60 * 1000));
                 }
             })
             .catch(async () => {
