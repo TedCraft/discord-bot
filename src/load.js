@@ -6,6 +6,8 @@ client.commands = new Collection();
 
 client.connections = new Map();
 
+client.timers = new Map();
+
 client.dbOptions = {
     host: '127.0.0.1',
     port: 3050,

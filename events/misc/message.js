@@ -1,4 +1,4 @@
-const { checkBadWordsRelative, checkCustomCommands, executeCustomCommands } = require('../../src/administration/administration');
+const { checkBadWordsRelative, checkCustomCommands, executeCustomCommands, checkGame } = require('../../src/administration/administration');
 const { replaceWith } = require('../../src/utility/string');
 
 module.exports = async (client, message) => {
@@ -6,6 +6,7 @@ module.exports = async (client, message) => {
 
     const prefix = client.config.app.prefix;
     if (await checkMessage(client, message, prefix)) return;
+    await(checkGame(client, message));
     if (message.content.indexOf(prefix) !== 0) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/g);

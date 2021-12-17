@@ -423,7 +423,7 @@ module.exports = {
         return new Promise(resolve => {
             if (command != null) command = command.replace(/\'/g, '\'\'');
             client.db.query(`DELETE FROM COMMANDS
-                          WHERE SERVER_ID='${serverId}'
+                          WHERE SERVER_ID=${serverId}
                           AND COMMAND='${command}'`,
                 function (err, result) {
                     if (err) {
@@ -432,6 +432,183 @@ module.exports = {
                     }
                     resolve(result);
                 });
+        });
+    },
+    
+    getGameType(client, game) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM GAME_TYPES
+                          WHERE GAME_TYPE_NAME='${game.replace(/\'/g, '\'\'')}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    insertGame(client, channelId, serverId, gameTypeId, isStart = false) {
+        return new Promise(resolve => {
+            client.db.query(`INSERT INTO GAME(CHANNEL_ID, SERVER_ID, GAME_TYPE_ID, IS_START) 
+                            VALUES('${channelId}', '${serverId}', ${gameTypeId}, ${isStart});`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    updateGameStart(client, channelId, isStart = true) {
+        return new Promise(resolve => {
+            client.db.query(`UPDATE GAME
+                            SET IS_START=${isStart}
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    updateGameTurn(client, channelId, turn) {
+        return new Promise(resolve => {
+            client.db.query(`UPDATE GAME
+                            SET TURN=${turn}
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getGame(client, channelId) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM GAME
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    deleteGame(client, channelId) {
+        return new Promise(resolve => {
+            client.db.query(`DELETE FROM GAME
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+
+    insertGamePlayer(client, channelId, userId) {
+        return new Promise(resolve => {
+            client.db.query(`INSERT INTO GAME_PLAYERS(CHANNEL_ID, USER_ID) 
+                            VALUES('${channelId}', '${userId}');`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getGamePlayers(client, channelId) {
+        return new Promise(resolve => {
+            client.db.query(`SELECT * FROM GAME_PLAYERS
+                          WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    deleteGamePlayers(client, channelId) {
+        return new Promise(resolve => {
+            client.db.query(`DELETE FROM GAME_PLAYERS
+                          WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    deleteGamePlayer(client, channelId, index) {
+        return new Promise(resolve => {
+            client.db.query(`DELETE FROM GAME_PLAYERS
+                          WHERE CHANNEL_ID='${channelId}'
+                          ROWS ${index} TO ${index};`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getTownsGame(client, channelId) {
+        return new Promise(resolve => {
+            const dbTownsList = [];
+            client.db.query(`SELECT * FROM TOWNS_GAME
+                          WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                for (const id in result) {
+                    dbTownsList.push(result[id].TOWN.toString('utf8'));
+                }
+                resolve(dbTownsList);
+            });
+        });
+    },
+    
+    insertGameTown(client, channelId, town) {
+        return new Promise(resolve => {
+            if (town != null) town = town.replace(/\'/g, '\'\'');
+            client.db.query(`INSERT INTO TOWNS_GAME(CHANNEL_ID, TOWN) 
+                            VALUES('${channelId}', '${town}');`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    deleteGameTowns(client, channelId) {
+        return new Promise(resolve => {
+            client.db.query(`DELETE FROM TOWNS_GAME
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
         });
     },
 };

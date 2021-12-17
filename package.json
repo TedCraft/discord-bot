@@ -9,10 +9,13 @@
   "author": "TedCraft",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/opus": "^0.5.3",
     "async": "^3.2.2",
     "canvas": "^2.8.0",
     "discord-ytdl-core": "^5.0.4",
     "discord.js": "^12.5.3",
+    "ffmpeg-static": "^4.4.0",
+    "got": "^11.8.2",
     "node-firebird": "^1.0.0",
     "node-schedule": "^2.1.0",
     "ytdl-core": "^4.9.2",

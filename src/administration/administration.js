@@ -1,6 +1,10 @@
-const { getBadWords, getUsersBDAYId, getUserBDAYServers, getServerCommands } = require('../database/database');
+const { getBadWords, getUsersBDAYId, getUserBDAYServers,
+    getServerCommands, getGame, getGamePlayers,
+    getTownsGame, insertGameTown, updateGameTurn } = require('../database/database');
 const { MessageAttachment } = require('discord.js');
 const { replaceWith } = require('../utility/string');
+const { setTownTimeout } = require('../utility/timer');
+const { get } = require('got');
 
 module.exports = {
     async checkBadWordsAbsolute(client, guildId, args) {
@@ -79,6 +83,34 @@ module.exports = {
         return commands.find(cmd => cmd.COMMAND.toString('utf8') && cmd.COMMAND.toString('utf8') == command);
     },
 
+    async checkGame(client, message) {
+        const game = await getGame(client, message.channel.id);
+        if (!game || !game.IS_START) return;
+
+        const gamePlayers = await getGamePlayers(client, message.channel.id);
+        if (gamePlayers[game.TURN - 1].USER_ID.toString('utf8') != message.author.id)
+            return message.channel.send(`${message.author} Сейчас не ваша очередь!`);
+
+        const args = message.content.toLowerCase().trim().split(/ +/g);
+        const place = await checkCorrectPlace(args[0]);
+        if (!place) return message.channel.send(`${message.author} Такого города нет!`);
+
+        const towns = await getTownsGame(client, message.channel.id);
+        if (towns.length > 0) {
+            if (towns.includes(place)) return message.channel.send(`${message.author} Город ${place} уже был!`);
+
+            const letter = towns[towns.length - 1].slice(-1);
+            if (place[0] != letter) return message.channel.send(`${message.author} Город должен начинаться с буквы ${letter}!`);
+        }
+
+        await insertGameTown(client, message.channel.id, place);
+        clearInterval(client.timers.get(message.channel.id));
+        const newTurn = game.TURN == gamePlayers.length ? 1 : game.TURN + 1;
+        await updateGameTurn(client, message.channel.id, newTurn)
+        setTownTimeout(client, message);
+        message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву ${place.slice(-1)}!`);
+    },
+
     async executeCustomCommands(client, message, command) {
         var str;
         var image;
@@ -95,9 +127,33 @@ module.exports = {
         if (command.TEXT) {
             str = command.TEXT.toString('utf8');
         }
-        
-        if(str||image) {
+
+        if (str || image) {
             message.channel.send(str, image);
         }
     },
 };
+
+async function checkCorrectPlace(place) {
+    return new Promise(resolve => {
+        const statements = ["city", "town", "village", "hamlet"];
+        const cityStates = ["сингапур", "монако", "ватикан", "гибралтар", "гонконг", "макао", "мелилья", "сеута"];
+        if (cityStates.includes(place)) resolve(place);
+        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=1`, { responseType: 'json' })
+            .then(res => {
+                const json = res.body;
+                if (json.length == 0) resolve(undefined);
+
+                for (const i in json) {
+                    if (statements.includes(json[i]["type"]) || statements.includes(json[i]["extratags"]["linked_place"]) ||
+                        statements.includes(json[i]["extratags"]["place"])) {
+                        resolve(json[i]["display_name"].split(",")[0].toLowerCase());
+                    }
+                }
+                resolve(undefined);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    });
+}
