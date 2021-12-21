@@ -6,10 +6,10 @@ module.exports = async (client, message) => {
 
     const prefix = client.config.app.prefix;
     if (await checkMessage(client, message, prefix)) return;
-    await(checkGame(client, message));
+    await checkGame(client, message);
     if (message.content.indexOf(prefix) !== 0) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/g);
+    const args = message.content.slice(prefix.length).trim().split(/ +|\n+|\t+/g);
 
     const command = args.shift().toLowerCase();
 

@@ -15,7 +15,7 @@ module.exports = {
     },
 
     getServersId(client) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query('SELECT * FROM SERVER;', function (err, result) {
                 if (err) {
@@ -32,7 +32,7 @@ module.exports = {
     },
 
     updateBirthDayRole(client, serverID, roleID) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query(`UPDATE SERVER
                             SET BIRTHDAY_ROLE=${roleID}
@@ -51,7 +51,7 @@ module.exports = {
     },
 
     getUserBDAYServers(client, userID) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM SERVER_USERS 
                             JOIN SERVER ON SERVER_USERS.SERVER_ID=SERVER.SERVER_ID
                             WHERE USER_ID = ${userID}
@@ -66,7 +66,7 @@ module.exports = {
     },
 
     getUsersId(client) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query('SELECT * FROM USER_T;', function (err, result) {
                 if (err) {
@@ -83,7 +83,7 @@ module.exports = {
     },
 
     getUser(client, userID) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM USER_T
                             WHERE USER_ID=${userID};`, function (err, result) {
                 if (err) {
@@ -96,7 +96,7 @@ module.exports = {
     },
 
     getUsersBDAYId(client, date = new Date()) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query(`SELECT * FROM USER_T
                             WHERE EXTRACT(DAY FROM BIRTHDAY)=${date.getDate()}
@@ -115,7 +115,7 @@ module.exports = {
     },
 
     insertServer(client, serverId, birthdayRole = null, rules = null, info = null) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             if (birthdayRole != null) birthdayRole = "'" + birthdayRole + "'";
             if (rules != null) rules = "'" + rules + "'";
             if (info != null) info = "'" + info + "'";
@@ -132,7 +132,7 @@ module.exports = {
     },
 
     insertUser(client, userId, messageCount = 0, birthday = null, lastChange = null) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             if (birthday != null) birthday = "'" + birthday + "'";
             if (lastChange != null) lastChange = "'" + birthday + "'";
             client.db.query(`INSERT INTO USER_T(USER_ID, MESSAGE_COUNT, BIRTHDAY, LAST_CHANGE_BDAY) 
@@ -148,7 +148,7 @@ module.exports = {
     },
 
     updateBirthdayUser(client, userId, birthday) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const date = new Date();
             client.db.query(`UPDATE USER_T
                             SET BIRTHDAY='${birthday}',
@@ -165,7 +165,7 @@ module.exports = {
     },
 
     deleteServer(client, serverId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM SERVER
                           WHERE SERVER_ID='${serverId}'`,
                 function (err, result) {
@@ -179,7 +179,7 @@ module.exports = {
     },
 
     deleteServerBdayRole(client, serverID) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`UPDATE SERVER
                             SET BIRTHDAY_ROLE=NULL
                             WHERE SERVER_ID=${serverID};`,
@@ -194,7 +194,7 @@ module.exports = {
     },
 
     deleteUser(client, userId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM USER_T
                           WHERE USER_ID='${userId}'`,
                 function (err, result) {
@@ -208,7 +208,7 @@ module.exports = {
     },
 
     getServerUsers(client, serverId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query(`SELECT * FROM SERVER_USERS
                             WHERE SERVER_ID='${serverId}';`, function (err, result) {
@@ -226,7 +226,7 @@ module.exports = {
     },
 
     getUserServers(client, userId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query(`SELECT * FROM SERVER_USERS
                             WHERE USER_ID='${userId}';`, function (err, result) {
@@ -244,7 +244,7 @@ module.exports = {
     },
 
     insertServerUser(client, serverId, userId, messageCount = 0) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`INSERT INTO SERVER_USERS(SERVER_ID, USER_ID, SERVER_MESSAGE_COUNT) 
                           VALUES('${serverId}', '${userId}', ${messageCount});`,
                 function (err, result) {
@@ -258,7 +258,7 @@ module.exports = {
     },
 
     insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, CHANNEL_ID) 
                           VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', '${thumbnailUrl}', ${length}, '${channelId}');`,
                 function (err, result) {
@@ -272,7 +272,7 @@ module.exports = {
     },
 
     deleteSongs(client, serverId, count = 1) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
                           ROWS ${count};`,
@@ -287,7 +287,7 @@ module.exports = {
     },
 
     getSongs(client, serverId, from = 1, to = 1) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
                           ROWS ${from} TO ${to};`, function (err, result) {
@@ -301,7 +301,7 @@ module.exports = {
     },
 
     getAllSongs(client, serverId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}';`, function (err, result) {
                 if (err) {
@@ -314,7 +314,7 @@ module.exports = {
     },
 
     insertBadWord(client, serverId, word) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`INSERT INTO BAD_WORDS(SERVER_ID, WORD) 
                           VALUES('${serverId}', '${word.replace(/\'/g, '\'\'')}');`,
                 function (err, result) {
@@ -328,7 +328,7 @@ module.exports = {
     },
 
     deleteBadWord(client, serverId, word) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM BAD_WORDS
                           WHERE SERVER_ID='${serverId}'
                           AND WORD='${word.replace(/\'/g, '\'\'')}'`,
@@ -343,7 +343,7 @@ module.exports = {
     },
 
     getBadWord(client, serverId, word) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM BAD_WORDS
                           WHERE SERVER_ID='${serverId}'
                           AND WORD='${word.replace(/\'/g, '\'\'')}'`, function (err, result) {
@@ -357,7 +357,7 @@ module.exports = {
     },
 
     getBadWords(client, serverId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbServerListTemp = [];
             client.db.query(`SELECT * FROM BAD_WORDS
                           WHERE SERVER_ID='${serverId}'`, function (err, result) {
@@ -375,7 +375,7 @@ module.exports = {
     },
 
     insertServerCommand(client, serverId, command, songUrl = null, imageUrl = null, text = null) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             if (command != null) command = command.replace(/\'/g, '\'\'');
             if (text != null) text = "'" + text.replace(/\'/g, '\'\'') + "'";
             if (songUrl != null) songUrl = "'" + songUrl + "'";
@@ -392,7 +392,7 @@ module.exports = {
     },
 
     getServerCommand(client, serverId, command) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             if (command != null) command = command.replace(/\'/g, '\'\'');
             client.db.query(`SELECT * FROM COMMANDS
                           WHERE SERVER_ID='${serverId}'
@@ -407,7 +407,7 @@ module.exports = {
     },
     
     getServerCommands(client, serverId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM COMMANDS
                           WHERE SERVER_ID='${serverId}'`, function (err, result) {
                 if (err) {
@@ -420,7 +420,7 @@ module.exports = {
     },
     
     deleteServerCommand(client, serverId, command) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             if (command != null) command = command.replace(/\'/g, '\'\'');
             client.db.query(`DELETE FROM COMMANDS
                           WHERE SERVER_ID=${serverId}
@@ -436,7 +436,7 @@ module.exports = {
     },
     
     getGameType(client, game) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM GAME_TYPES
                           WHERE GAME_TYPE_NAME='${game.replace(/\'/g, '\'\'')}';`, function (err, result) {
                 if (err) {
@@ -449,7 +449,7 @@ module.exports = {
     },
     
     insertGame(client, channelId, serverId, gameTypeId, isStart = false) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`INSERT INTO GAME(CHANNEL_ID, SERVER_ID, GAME_TYPE_ID, IS_START) 
                             VALUES('${channelId}', '${serverId}', ${gameTypeId}, ${isStart});`, function (err, result) {
                 if (err) {
@@ -462,7 +462,7 @@ module.exports = {
     },
     
     updateGameStart(client, channelId, isStart = true) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`UPDATE GAME
                             SET IS_START=${isStart}
                             WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
@@ -476,7 +476,7 @@ module.exports = {
     },
     
     updateGameTurn(client, channelId, turn) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`UPDATE GAME
                             SET TURN=${turn}
                             WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
@@ -490,7 +490,7 @@ module.exports = {
     },
     
     getGame(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM GAME
                             WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
@@ -503,7 +503,7 @@ module.exports = {
     },
     
     deleteGame(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM GAME
                             WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
@@ -516,7 +516,7 @@ module.exports = {
     },
 
     insertGamePlayer(client, channelId, userId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`INSERT INTO GAME_PLAYERS(CHANNEL_ID, USER_ID) 
                             VALUES('${channelId}', '${userId}');`, function (err, result) {
                 if (err) {
@@ -529,7 +529,7 @@ module.exports = {
     },
     
     getGamePlayers(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`SELECT * FROM GAME_PLAYERS
                           WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
@@ -542,7 +542,7 @@ module.exports = {
     },
     
     deleteGamePlayers(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM GAME_PLAYERS
                           WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
@@ -555,7 +555,7 @@ module.exports = {
     },
     
     deleteGamePlayer(client, channelId, index) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM GAME_PLAYERS
                           WHERE CHANNEL_ID='${channelId}'
                           ROWS ${index} TO ${index};`, function (err, result) {
@@ -569,10 +569,11 @@ module.exports = {
     },
     
     getTownsGame(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const dbTownsList = [];
             client.db.query(`SELECT * FROM TOWNS_GAME
-                          WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
+                            JOIN TOWNS ON
+                            WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
                     console.log(err);
                     reject(err);
@@ -585,11 +586,12 @@ module.exports = {
         });
     },
     
-    insertGameTown(client, channelId, town) {
-        return new Promise(resolve => {
-            if (town != null) town = town.replace(/\'/g, '\'\'');
-            client.db.query(`INSERT INTO TOWNS_GAME(CHANNEL_ID, TOWN) 
-                            VALUES('${channelId}', '${town}');`, function (err, result) {
+    insertGameTown(client, channelId, townId, townName) {
+        return new Promise((resolve, reject) => {
+            if (townName != null) townName = townName.replace(/\'/g, '\'\'');
+            const date = new Date();
+            client.db.query(`INSERT INTO TOWNS_GAME(CHANNEL_ID, TOWN_ID, GAME_NAME, GAME_DATE)
+                            VALUES('${channelId}', ${townId}, '${townName}', '${date.getDate()}.${date.getMonth()}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`, function (err, result) {
                 if (err) {
                     console.log(err);
                     reject(err);
@@ -600,7 +602,7 @@ module.exports = {
     },
     
     deleteGameTowns(client, channelId) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             client.db.query(`DELETE FROM TOWNS_GAME
                             WHERE CHANNEL_ID='${channelId}';`, function (err, result) {
                 if (err) {
@@ -608,6 +610,78 @@ module.exports = {
                     reject(err);
                 }
                 resolve(result);
+            });
+        });
+    },
+    
+    insertTown(client, town) {
+        return new Promise((resolve, reject) => {
+            if (town != null) town = town.replace(/\'/g, '\'\'');
+            client.db.query(`INSERT INTO TOWNS(NAME) 
+                            VALUES('${town}');`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    insertTownAlt(client, townId, name) {
+        return new Promise((resolve, reject) => {
+            if (name != null) name = name.replace(/\'/g, '\'\'');
+            client.db.query(`INSERT INTO TOWNS_ALTNAMES(TOWN_ID, ALT_NAME) 
+                            VALUES(${townId}, '${name}');`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getTownAndAlts(client, name) {
+        return new Promise((resolve, reject) => {
+            if (name != null) name = name.replace(/\'/g, '\'\'');
+            client.db.query(`SELECT * FROM TOWNS_ALTNAMES
+                            JOIN TOWNS ON TOWNS_ALTNAMES.TOWN_ID=TOWNS.TOWN_ID
+                            WHERE NAME='${name}'
+                            OR ALT_NAME='${name}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    getTownGame(client, channelId, townId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`SELECT * FROM TOWNS_GAME
+                          WHERE CHANNEL_ID='${channelId}'
+                          AND TOWN_ID=${townId};`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    getLastTownGame(client, channelId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`SELECT FIRST 1 * FROM TOWNS_GAME
+                          WHERE CHANNEL_ID='${channelId}'
+                          ORDER BY GAME_DATE DESC;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
             });
         });
     },

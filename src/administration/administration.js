@@ -1,10 +1,12 @@
 const { getBadWords, getUsersBDAYId, getUserBDAYServers,
     getServerCommands, getGame, getGamePlayers,
-    getTownsGame, insertGameTown, updateGameTurn } = require('../database/database');
+    getTownsGame, insertGameTown, updateGameTurn,
+    getTownAndAlts, getTownGame, getLastTownGame } = require('../database/database');
 const { MessageAttachment } = require('discord.js');
 const { replaceWith } = require('../utility/string');
 const { setTownTimeout } = require('../utility/timer');
 const { get } = require('got');
+const { loadImage } = require('canvas')
 
 module.exports = {
     async checkBadWordsAbsolute(client, guildId, args) {
@@ -91,25 +93,27 @@ module.exports = {
         if (gamePlayers[game.TURN - 1].USER_ID.toString('utf8') != message.author.id)
             return message.channel.send(`${message.author} Сейчас не ваша очередь!`);
 
-        const args = message.content.toLowerCase().trim().split(/ +/g);
-        const place = await checkCorrectPlace(args[0]);
+        const args = message.content.trim().split(/ +/g);
+        const place = await getTownAndAlts(client, args[0].toLowerCase());
         if (!place) return message.channel.send(`${message.author} Такого города нет!`);
 
-        const towns = await getTownsGame(client, message.channel.id);
-        const letters = ["ь", "ъ", "ы"];
-        if (towns.length > 0) {
-            if (towns.includes(place)) return message.channel.send(`${message.author} Город ${place} уже был!`);
+        const town = await getTownGame(client, message.channel.id, place.TOWN_ID);
+        if (town) return message.channel.send(`${message.author} Город ${args[0]} уже был!`);
 
-            const letter = !letters.includes(towns[towns.length - 1].slice(-1)) ? towns[towns.length - 1].slice(-1) : towns[towns.length - 1].slice(-2, -1);
-            if (place[0] != letter) return message.channel.send(`${message.author} Город должен начинаться с буквы ${letter}!`);
+        const lastTown = await getLastTownGame(client, message.channel.id)
+        const letters = ["ь", "ъ", "ы"];
+        if (lastTown) {
+            const lastTownName = lastTown.GAME_NAME.toString('utf8');
+            const letter = !letters.includes(lastTownName.slice(-1)) ? lastTownName.slice(-1) : lastTownName.slice(-2, -1);
+            if (args[0][0].toLowerCase() != letter) return message.channel.send(`${message.author} Город должен начинаться с буквы ${letter.toUpperCase()}!`);
         }
 
-        await insertGameTown(client, message.channel.id, place);
+        await insertGameTown(client, message.channel.id, place.TOWN_ID, args[0]);
         clearInterval(client.timers.get(message.channel.id));
         const newTurn = game.TURN == gamePlayers.length ? 1 : game.TURN + 1;
         await updateGameTurn(client, message.channel.id, newTurn)
         setTownTimeout(client, message);
-        message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву ${!letters.includes(place.slice(-1)) ? place.slice(-1) : place.slice(-2, -1)}!`);
+        message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву \`${(!letters.includes(args[0].slice(-1)) ? args[0].slice(-1) : args[0].slice(-2, -1)).toUpperCase()}\`!`);
     },
 
     async executeCustomCommands(client, message, command) {
@@ -129,7 +133,7 @@ module.exports = {
             str = command.TEXT.toString('utf8');
         }
 
-        if (str || image) {
+        if (str != undefined || image != undefined) {
             message.channel.send(str, image);
         }
     },
@@ -140,7 +144,7 @@ async function checkCorrectPlace(place) {
         const statements = ["city", "town", "village", "hamlet"];
         const cityStates = ["сингапур", "монако", "ватикан", "гибралтар", "гонконг", "макао", "мелилья", "сеута"];
         if (cityStates.includes(place)) resolve(place);
-        get(`https://nominatim.openstreetmap.org/search?q="${place}"&format=jsonv2&extratags=1&limit=1`, { responseType: 'json' })
+        get(`https://nominatim.openstreetmap.org/search?q=${place}&format=jsonv2&extratags=1&limit=3`, { responseType: 'json' })
             .then(res => {
                 const json = res.body;
                 if (json.length == 0) resolve(undefined);

@@ -1,5 +1,6 @@
-const { getGameType, insertGame, updateGameStart, getGame, deleteGame, insertGamePlayer, deleteGamePlayers } = require('../../src/database/database');
+const { getGameType, insertGame, updateGameStart, getGame, deleteGame, insertGamePlayer, deleteGamePlayers, getTownGame } = require('../../src/database/database');
 const { msToTime } = require('../../src/utility/time');
+const { setTownTimeout } = require('../../src/utility/timer');
 
 module.exports = {
     name: 'startgame',
@@ -40,12 +41,7 @@ module.exports = {
                     }
                     msg.edit(`Рыба-карась, игра \`${game}\` началась!`);
                     message.channel.send(`Игрок ${message.author}, начинайте!`);
-                    client.timers.set(message.channel.id, setTimeout( async () => {
-                        message.channel.send(`Превышено время ожидания ответа!`);
-                        await deleteGamePlayers(client, message.channel.id);
-                        await deleteGame(client, message.channel.id);
-                        client.timer.delete(message.channel.id);
-                    }, 1 * 60 * 1000));
+                    setTownTimeout(client, message.channel.id);
                 }
             })
             .catch(async () => {

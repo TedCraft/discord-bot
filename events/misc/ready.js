@@ -1,7 +1,9 @@
 const { getServersId, insertServer, deleteServer,
     connectToDatabase,
     getUsersId, insertUser, deleteUser,
-    getServerUsers, insertServerUser } = require('../../src/database/database');
+    getServerUsers, insertServerUser, insertTown, insertTownAlt } = require('../../src/database/database');
+
+const { readFileSync } = require('fs');
 
 const { checkBirthDays } = require('../../src/administration/administration');
 
@@ -15,8 +17,22 @@ module.exports = async (client) => {
     client.db = await connectToDatabase(client);
     await checkDatabase(client);
     console.log(`Database check successful!`);
+    
+    /*let temp = readFileSync("C:\\Users\\User\\Desktop\\cities500\\cities500.txt", "utf8");
+    temp = temp.split("\n");
+    let n = 1;
+    for (const i in temp) {
+        temp[i] = temp[i].split("\t");
+        await insertTown(client, temp[i][2]);
+        const alts = temp[i][3].split(",");
+        for (const j in alts) {
+            if (alts[j] != "")
+                await insertTownAlt(client, n, alts[j].toLowerCase());
+        }
+        n++;
+    }*/
 
-    checkBirthDays(client);
+    await checkBirthDays(client);
     scheduleJob('0 0 * * *', () => { checkBirthDays(client) });
 };
 
@@ -51,8 +67,8 @@ async function checkDatabase(client) {
                 dbUsersIDList.push(usersIdList[j]);
             }
             if (!dbServerUsers.includes(usersIdList[j])) {
-                    await insertServerUser(client, serverList[i].id, usersIdList[j]);
-                    dbServerUsers.push(usersIdList[j]);
+                await insertServerUser(client, serverList[i].id, usersIdList[j]);
+                dbServerUsers.push(usersIdList[j]);
             }
         }
     }

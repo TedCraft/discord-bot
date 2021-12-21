@@ -52,9 +52,9 @@ module.exports = {
                     break;
                 case "t:":
                     if (stroke.charAt(0) === "{" && message.content.includes("}")) {
-                        const mas = message.content.split(/\s*(\{\S.*\})\s*/g);
-                        if (mas.length > 1) {
-                            text = mas[1].slice(1, -1);
+                        const mas = message.content.match(/\{(.|\s)*\}/g);
+                        if (mas.length > 0) {
+                            text = mas[0].slice(1, -1);
                         }
                     }
                     else {
