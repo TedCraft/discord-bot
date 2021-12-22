@@ -685,4 +685,92 @@ module.exports = {
             });
         });
     },
+    
+    updateRules(client, serverId, rules) {
+        return new Promise((resolve, reject) => {
+            if (rules != null) rules = "'" + rules.replace(/\'/g, '\'\'') + "'";
+            client.db.query(`UPDATE SERVER
+                            SET RULES=${rules}
+                            WHERE SERVER_ID='${serverId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getRules(client, serverId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`SELECT * FROM SERVER
+                          WHERE SERVER_ID='${serverId}'
+                          AND RULES IS NOT NULL;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    deleteRules(client, serverId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`UPDATE SERVER
+                            SET RULES=NULL
+                            WHERE SERVER_ID='${serverId}'
+                            AND RULES IS NOT NULL;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    updateInfo(client, serverId, info) {
+        return new Promise((resolve, reject) => {
+            if (info != null) info = "'" + info.replace(/\'/g, '\'\'') + "'";
+            client.db.query(`UPDATE SERVER
+                            SET INFO=${info}
+                            WHERE SERVER_ID='${serverId}';`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
+    
+    getInfo(client, serverId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`SELECT * FROM SERVER
+                          WHERE SERVER_ID='${serverId}'
+                          AND INFO IS NOT NULL;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result[0]);
+            });
+        });
+    },
+    
+    deleteInfo(client, serverId) {
+        return new Promise((resolve, reject) => {
+            client.db.query(`UPDATE SERVER
+                            SET INFO=NULL
+                            WHERE SERVER_ID='${serverId}'
+                            AND INFO IS NOT NULL;`, function (err, result) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                }
+                resolve(result);
+            });
+        });
+    },
 };
