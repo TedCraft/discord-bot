@@ -22,7 +22,7 @@ module.exports = {
 
         if (args[0] == undefined) return;
 
-        if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/playlist\?list=)([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
+        if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/playlist\?list=)([a-zA-Z0-9-_]{34})(?:\S+)?$/) != null) {
             const pl = await ytpl(args[0], { limit: Infinity });
             const plSongs = pl.items;
             song = await getSongFromInfo(plSongs[0], message, voiceChannel.id);
@@ -32,7 +32,7 @@ module.exports = {
                 await getSongFromInfo(plSongs[i], message, voiceChannel.id);
             }
 
-            if (!client.connections.get(message.guild.id)) {
+            if (!client.connections.get(message.guild.id) || !client.connections.get(message.guild.id).dispatcher) {
                 var connection = await voiceChannel.join();
                 client.connections.set(message.guild.id, connection);
                 play(client, message.guild, song)
@@ -61,7 +61,7 @@ module.exports = {
             }
         }
 
-        if (!client.connections.get(message.guild.id)) {
+        if (!client.connections.get(message.guild.id) || !client.connections.get(message.guild.id).dispatcher) {
             var connection = await voiceChannel.join();
             client.connections.set(message.guild.id, connection);
             play(client, message.guild, song)
@@ -132,12 +132,16 @@ async function play(client, guild, song) {
 
     if (song.url != null) {
         client.connections.get(guild.id).play(ytdl(song.url, { filter: "audioonly", opusEncoded: true, highWaterMark: 1 << 25 }), { type: 'opus' })
-            .on('finish', async () => {
-                toNewSong(client, guild, song);
+            .on('finish', () => {
+                toNewSong(client, guild, song).catch(err => {
+                    console.log(err);
+                });
             })
-            .on('error', error => {
+            .on('error', (error) => {
                 console.error(error);
-                toNewSong(client, guild, song);
+                toNewSong(client, guild, song).catch(err => {
+                    console.log(err);
+                });
             });
     }
 }

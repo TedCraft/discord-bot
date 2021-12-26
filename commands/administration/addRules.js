@@ -13,6 +13,6 @@ module.exports = {
         const rules = message.content.slice(message.content.indexOf(args[0]));
         
         await updateRules(client, message.guild.id, rules);
-        message.channel.send(`${message.author} Правило добавлено!`);
+        message.channel.send(`${message.author} Правила добавлены!`);
     }
 };
