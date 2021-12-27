@@ -169,11 +169,11 @@ module.exports = {
         return result;
     },
 
-    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, channelId) {
+    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length) {
         const result = await transactionTemplate(client,
-            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, CHANNEL_ID) 
+            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH) 
              VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', 
-             '${thumbnailUrl}', ${length}, '${channelId}');`);
+             '${thumbnailUrl}', ${length});`);
         return result;
     },
 

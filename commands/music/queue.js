@@ -1,27 +1,26 @@
-const {msToTime, sToTime} = require('../../src/utility/time');
+const { getAllSongs } = require('../../src/database/database');
+const { msToTime, sToTime } = require('../../src/utility/time');
+const { MessageEmbed } = require('discord.js');
 
 module.exports = {
     name: 'queue',
     aliases: ['q'],
     voice: true,
-    
-    async execute(message, serverQueue) {
-        if (!serverQueue) return message.channel.send(`Очередь пуста`);
-    
-        const embed = new Discord.MessageEmbed();
+
+    async execute(client, message, args) {
+        const serverQueue = await getAllSongs(client, message.guild.id);
+        if (serverQueue.length == 0) return message.channel.send(`Очередь пуста`);
+
+        const embed = new MessageEmbed();
         embed.setColor('PURPLE');
         embed.setTitle('Очередь');
-    
+
         let str = "\*\*Сейчас играет:\*\*\n";
-        if (serverQueue.songs[0].url != null) {
-            str += (`\[${serverQueue.songs[0].title}\]\(${serverQueue.songs[0].url}\) от \`${serverQueue.songs[0].user}\`\n`);
-        }
-        else {
-            str += (`\`${serverQueue.songs[0].title.replace(/_/gi, " ")}\` от \`${serverQueue.songs[0].user}\`\n`);
-        }
-        let curTime = msToTime(serverQueue.connection.dispatcher.streamTime);
-        let lenTime = sToTime(serverQueue.songs[0].length);
-        let totTime = parseInt(serverQueue.songs[0].length);
+        str += (`\[${serverQueue[0].TITLE.toString('utf8')}\]\(${serverQueue[0].URL.toString('utf8')}\) от \`${serverQueue[0].REQUEST_USER.toString('utf8')}\`\n`);
+
+        let curTime = msToTime(client.connections.get(message.guild.id).dispatcher.streamTime);
+        let lenTime = sToTime(serverQueue[0].LENGTH);
+        let totTime = parseInt(serverQueue[0].LENGTH);
         while (lenTime.length > 4) {
             if (lenTime[0] === '0' || lenTime[0] === ':') {
                 curTime = curTime.slice(1);
@@ -32,17 +31,12 @@ module.exports = {
             }
         }
         str += ` \`${curTime} / ${lenTime}\`\n\n`;
-    
-        if (serverQueue.songs.length > 1) {
+
+        if (serverQueue.length > 1) {
             str += `\*\*Далее в очереди:\*\*\n`
-            for (let i = 1; i < (serverQueue.songs.length < 11 ? serverQueue.songs.length : 11); i++) {
-                if (serverQueue.songs[i].url != null) {
-                    str += (`\`${i}.\` \[${serverQueue.songs[i].title}\]\(${serverQueue.songs[i].url}\)`);
-                }
-                else {
-                    str += (`\`${i}.\` \`${serverQueue.songs[i].title.replace(/_/gi, " ")}\``);
-                }
-                let lenTime = sToTime(serverQueue.songs[i].length);
+            for (let i = 1; i < (serverQueue.length < 11 ? serverQueue.length : 11); i++) {
+                str += (`\`${i}.\` \[${serverQueue[i].TITLE.toString('utf8')}\]\(${serverQueue[i].URL.toString('utf8')}\)`);
+                let lenTime = sToTime(serverQueue[i].LENGTH);
                 while (lenTime.length > 4) {
                     if (lenTime[0] === '0' || lenTime[0] === ':') {
                         lenTime = lenTime.slice(1);
@@ -51,18 +45,18 @@ module.exports = {
                         break;
                     }
                 }
-                str += ` | \`${lenTime}\` от \`${serverQueue.songs[i].user}\``;
+                str += ` | \`${lenTime}\` от \`${serverQueue[i].REQUEST_USER}\``;
                 str += '\n\n';
             }
-    
-            for (let i = 1; i < serverQueue.songs.length; i++) {
-                totTime += parseInt(serverQueue.songs[i].length);
+
+            for (let i = 1; i < serverQueue.length; i++) {
+                totTime += parseInt(serverQueue[i].LENGTH);
             }
         }
-    
-        str += `\*\*Всего песен: \`${serverQueue.songs.length}\`. Длительность очереди: \`${sToTime(String(totTime))}\`\*\*`;
+
+        str += `\*\*Всего песен: \`${serverQueue.length}\`. Длительность очереди: \`${sToTime(totTime)}\`\*\*`;
         embed.setDescription(str);
-    
+
         message.channel.send(embed);
     }
 };

@@ -25,23 +25,21 @@ module.exports = {
         if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/playlist\?list=)([a-zA-Z0-9-_]{34})(?:\S+)?$/) != null) {
             const pl = await ytpl(args[0], { limit: Infinity });
             const plSongs = pl.items;
-            song = await getSongFromInfo(plSongs[0], message, voiceChannel.id);
+            song = await getSongFromInfo(plSongs[0], message);
             plSongs.shift();
-
-            for (const i in plSongs) {
-                await getSongFromInfo(plSongs[i], message, voiceChannel.id);
-            }
+            for (const i in plSongs)
+                await getSongFromInfo(plSongs[i], message);
 
             if (!client.connections.get(message.guild.id) || !client.connections.get(message.guild.id).dispatcher) {
                 var connection = await voiceChannel.join();
                 client.connections.set(message.guild.id, connection);
-                play(client, message.guild, song)
+                play(client, message.guild, song);
             }
             message.channel.send(`Плейлист \`${pl.title}\` добавлен в очередь`);
             return;
         }
         else if (args[0].match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
-            song = await getSong(args[0], message, voiceChannel.id, count);
+            song = await getSong(args[0], message, count);
         }
         else {
             let str = "";
@@ -54,9 +52,9 @@ module.exports = {
                 message.channel.send("Не удалось найти композицию!");
                 return;
             }
-            for(const i in searchResult.items) {
-                if(searchResult.items[i].isLive) continue;
-                song = await getSongFromInfo(searchResult.items[i], message, voiceChannel.id);
+            for (const i in searchResult.items) {
+                if (searchResult.items[i].isLive) continue;
+                song = await getSongFromInfo(searchResult.items[i], message);
                 break;
             }
         }
@@ -72,7 +70,7 @@ module.exports = {
     }
 };
 
-async function getSong(url, message, voiceChannelId, count = 1) {
+async function getSong(url, message, count = 1) {
     const song = {
         title: null,
         url: null,
@@ -82,21 +80,21 @@ async function getSong(url, message, voiceChannelId, count = 1) {
     }
 
     const songInfo = await ytdl.getBasicInfo(url);
-    if(songInfo.isLive) throw "Streams not allowed!";
-    
+    if (songInfo.isLive) throw "Streams not allowed!";
+
     song.title = songInfo.videoDetails.title;
     song.url = songInfo.videoDetails.video_url;
     song.thumbnail = songInfo.videoDetails.thumbnails[songInfo.videoDetails.thumbnails.length - 1].url;
     song.length = songInfo.videoDetails.lengthSeconds;
 
     for (var i = 0; i < count; i++) {
-        await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
+        await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length);
     }
     return song;
 }
 
-async function getSongFromInfo(songInfo, message, voiceChannelId) {
-    if(songInfo.isLive) throw "Streams not allowed!";
+async function getSongFromInfo(songInfo, message) {
+    if (songInfo.isLive) throw "Streams not allowed!";
     const song = {
         title: null,
         url: null,
@@ -119,7 +117,7 @@ async function getSongFromInfo(songInfo, message, voiceChannelId) {
         }
     }
 
-    await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, voiceChannelId);
+    await insertSong(client, message.guild.id, song.title, song.url, song.user, song.thumbnail, song.length);
     return song;
 }
 

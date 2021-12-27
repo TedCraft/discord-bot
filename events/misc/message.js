@@ -6,7 +6,6 @@ module.exports = async (client, message) => {
 
     const prefix = client.config.app.prefix;
     if (await checkMessage(client, message, prefix)) return;
-    await checkGame(client, message);
     if (message.content.indexOf(prefix) !== 0) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +|\n+|\t+/g);
@@ -30,6 +29,8 @@ module.exports = async (client, message) => {
             console.log(err);
         });
     }
+    
+    await checkGame(client, message);
 };
 
 async function checkMessage(client, message, prefix) {

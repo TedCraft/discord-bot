@@ -20,14 +20,20 @@ module.exports = {
                 message.channel.send(`<@${gamePlayers[gamePlayers.length - 1].USER_ID.toString('utf8')}> Поздравляю, вы победили! :partying_face:`);
             }
             else {
-                const lastTown = await getLastTownGame(client, message.channel.id);
-                const lastTownName = lastTown.GAME_NAME.toString('utf8');
-                const letters = ["ь", "ъ", "ы"];
-                const letter = !letters.includes(lastTownName.slice(-1)) ? lastTownName.slice(-1) : lastTownName.slice(-2, -1);
-
                 const newTurn = game.TURN > gamePlayers.length ? game.TURN-- : game.TURN;
                 await updateGameTurn(client, message.channel.id, newTurn);
-                message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву \`${letter.toUpperCase()}\`!`);
+                
+                const lastTown = await getLastTownGame(client, message.channel.id);
+                if (lastTown) {
+                    const lastTownName = lastTown.GAME_NAME.toString('utf8');
+                    const letters = ["ь", "ъ", "ы"];
+                    const letter = !letters.includes(lastTownName.slice(-1)) ? lastTownName.slice(-1) : lastTownName.slice(-2, -1);
+                    message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву \`${letter.toUpperCase()}\`!`);
+                }
+                else {
+                    message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите название города!`);
+                }
+
                 setTownTimeout(client, message);
             }
         }, 1 * 60 * 1000, client, message));

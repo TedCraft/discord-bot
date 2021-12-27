@@ -1,24 +1,19 @@
-module.exports = async (user) => {
-    if (user.user.username[0] === "!") {
-        var temp = 0;
-        for (i = 0; i < user.user.username.length; i++) {
-            if (user.user.username[i] === "!" || user.user.username[i] === " ") {
-                temp++;
-            }
-            else {
-                break;
-            }
-        }
-        if (user.user.username.length === temp) {
-            user.setNickname("Восклицательный знак").catch(() => {
-                return;
-            });
-            return;
-        }
-        else {
-            user.setNickname(user.user.username.slice(temp)).catch(() => {
-                return;
-            });
+const { getUserServers } = require('../../src/database/database');
+const { checkBadWordsStroke } = require('../../src/administration/administration');
+
+module.exports = async (client, user_new) => {
+    await insertUser(client, user_new.id);
+    //await insertServerUser(client, serverList[i].id, usersIdList[j]);
+    
+    const dbUserServers = await getUserServers(client, user_new.id);
+    for(const i in dbUserServers) {
+        const guild = client.guilds.cache.get(dbUserServers[i]);
+        const member = guild.members.cache.get(user_new.id);
+        if(!member.manageable) return;
+        
+        if(member.nickname == null) {
+            newNick = await checkBadWordsStroke(client, guild.id, user_new.username);
+            if (newNick != user_new.username) member.setNickname(newNick);
         }
     }
 }
