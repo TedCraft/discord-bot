@@ -1,4 +1,4 @@
-const { getGameType, insertGame, updateGameStart, getGame, deleteGame, insertGamePlayer, deleteGamePlayers, getTownGame } = require('../../src/database/database');
+const { getGameType, insertGame, updateGameStart, getGame, deleteGame, insertGamePlayer, deleteGamePlayers, deleteGameTowns } = require('../../src/database/database');
 const { msToTime } = require('../../src/utility/time');
 const { setTownTimeout } = require('../../src/utility/timer');
 
@@ -32,6 +32,8 @@ module.exports = {
                 const users = collected.first().users.cache.filter(User => !User.bot);
                 if (users.size < 2) {
                     msg.edit(`Недостаточно пользователей!`);
+                    await deleteGamePlayers(client, message.channel.id);
+                    await deleteGameTowns(client, message.channel.id);
                     await deleteGame(client, message.channel.id);
                 }
                 else {
@@ -41,11 +43,13 @@ module.exports = {
                     }
                     msg.edit(`Рыба-карась, игра \`${game}\` началась!`);
                     message.channel.send(`Игрок ${message.author}, начинайте!`);
-                    setTownTimeout(client, message.channel.id);
+                    setTownTimeout(client, message);
                 }
             })
-            .catch(async () => {
+            .catch(async (ex) => {
                 msg.edit(`Недостаточно пользователей!`);
+                await deleteGamePlayers(client, message.channel.id);
+                await deleteGameTowns(client, message.channel.id);
                 await deleteGame(client, message.channel.id);
             });
     }

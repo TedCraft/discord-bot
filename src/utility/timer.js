@@ -12,7 +12,7 @@ module.exports = {
             if (gamePlayers.length - 1 != 1) message.channel.send(`<@${gamePlayers[game.TURN - 1].USER_ID.toString('utf8')}> Время вышло, передаю ход следующему игроку!`);
             await deleteGamePlayer(client, message.channel.id, game.TURN);
 
-            gamePlayers.splice(game.TURN - 1);
+            gamePlayers.splice(game.TURN - 1, 1);
             if (gamePlayers.length == 1) {
                 await deleteGamePlayers(client, message.channel.id);
                 await deleteGameTowns(client, message.channel.id);
@@ -20,7 +20,7 @@ module.exports = {
                 message.channel.send(`<@${gamePlayers[gamePlayers.length - 1].USER_ID.toString('utf8')}> Поздравляю, вы победили! :partying_face:`);
             }
             else {
-                const newTurn = game.TURN > gamePlayers.length ? game.TURN-- : game.TURN;
+                const newTurn = game.TURN > gamePlayers.length ? 1 : game.TURN;
                 await updateGameTurn(client, message.channel.id, newTurn);
                 
                 const lastTown = await getLastTownGame(client, message.channel.id);

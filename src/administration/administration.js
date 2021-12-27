@@ -109,7 +109,12 @@ module.exports = {
         }
 
         await insertGameTown(client, message.channel.id, place.TOWN_ID, args[0]);
-        clearInterval(client.timers.get(message.channel.id));
+        try {
+            clearInterval(client.timers.get(message.channel.id));
+        }
+        catch (ex) {
+            console.log(ex);
+        }
         const newTurn = game.TURN == gamePlayers.length ? 1 : game.TURN + 1;
         await updateGameTurn(client, message.channel.id, newTurn)
         setTownTimeout(client, message);

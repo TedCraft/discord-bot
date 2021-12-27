@@ -6,7 +6,10 @@ module.exports = async (client, message) => {
 
     const prefix = client.config.app.prefix;
     if (await checkMessage(client, message, prefix)) return;
-    if (message.content.indexOf(prefix) !== 0) return;
+    if (message.content.indexOf(prefix) !== 0) {
+        await checkGame(client, message);
+        return;
+    }
 
     const args = message.content.slice(prefix.length).trim().split(/ +|\n+|\t+/g);
 
@@ -21,16 +24,15 @@ module.exports = async (client, message) => {
         });
         return;
     }
-    
+
     const customCmd = await checkCustomCommands(client, message.guild.id, command);
     if (customCmd) {
         executeCustomCommands(client, message, customCmd).catch(err => {
             message.channel.send("Отказано");
             console.log(err);
         });
+        return;
     }
-    
-    await checkGame(client, message);
 };
 
 async function checkMessage(client, message, prefix) {
