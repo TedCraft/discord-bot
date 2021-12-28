@@ -37,7 +37,7 @@ module.exports = async (client, message) => {
 
 async function checkMessage(client, message, prefix) {
     const args = message.content.toLowerCase().trim().split(/ +/g);
-    if (args[0].slice(prefix.length).toLowerCase() != "deletebw" && args[0].slice(prefix.length).toLowerCase() != "delbw") {
+    if (args[0].slice(prefix.length).toLowerCase() != "delbw" && args[0].slice(prefix.length).toLowerCase() != "delbadword") {
         const badWord = await checkBadWordsRelative(client, message.guild.id, args)
         if (badWord != undefined) {
             message.author.send(`Слово \`${replaceWith(badWord, 2, "*".repeat(badWord.length - 2))}\` на сервере ${message.guild.name} запрещено!`);

@@ -1,7 +1,7 @@
 const { deleteBadWord, getBadWord } = require('../../src/database/database');
 
 module.exports = {
-    name: 'deletebadword',
+    name: 'delbadword',
     aliases: ['delbw'],
     voice: false,
 
