@@ -28,7 +28,7 @@ module.exports = {
     },
 
     async checkBadWordsStroke(client, guildId, str) {
-        var args = str.trim().split(/ +/g);
+        var args = str.toLowerCase().trim().split(/ +/g);
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             badWords.forEach(function (element) {
