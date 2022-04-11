@@ -64,7 +64,8 @@ module.exports = {
             }
         }
 
-        const usersOldID = await getUsersBDAYId(client, new Date(`${date.getMonth() + 1}.${date.getDate() - 1}`))
+        date.setDate(date.getDate() - 1);
+        const usersOldID = await getUsersBDAYId(client, date)
         for (const i in usersOldID) {
             const serversID = await getUserBDAYServers(client, usersOldID[i]);
             for (const j in serversID) {

@@ -119,7 +119,7 @@ module.exports = {
         const date = new Date();
         const result = await transactionTemplate(client, `UPDATE USER_T
                             SET BIRTHDAY='${birthday}',
-                                LAST_CHANGE_BDAY='${date.getDate()}.${date.getMonth()}.${date.getFullYear()}'
+                                LAST_CHANGE_BDAY='${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}'
                             WHERE USER_ID=${userId};`);
         return result;
     },
@@ -170,10 +170,11 @@ module.exports = {
     },
 
     async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length) {
+        const date = new Date();
         const result = await transactionTemplate(client,
-            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH) 
+            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, ADD_TIME) 
              VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', 
-             '${thumbnailUrl}', ${length});`);
+             '${thumbnailUrl}', ${length}, '${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
         return result;
     },
 
@@ -187,13 +188,15 @@ module.exports = {
     async getSongs(client, serverId, from = 1, to = 1) {
         const result = await transactionTemplate(client, `SELECT * FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
+                          ORDER BY ADD_TIME ASC
                           ROWS ${from} TO ${to};`);
         return result;
     },
 
     async getAllSongs(client, serverId) {
         const result = await transactionTemplate(client, `SELECT * FROM MUSIC_QUEUE
-                          WHERE SERVER_ID='${serverId}';`);
+                          WHERE SERVER_ID='${serverId}'
+                          ORDER BY ADD_TIME ASC;`);
         return result;
     },
 
@@ -344,7 +347,7 @@ module.exports = {
         if (townName != null) townName = townName.replace(/\'/g, '\'\'');
         const date = new Date();
         const result = await transactionTemplate(client, `INSERT INTO TOWNS_GAME(CHANNEL_ID, TOWN_ID, GAME_NAME, GAME_DATE)
-                            VALUES('${channelId}', ${townId}, '${townName}', '${date.getDate()}.${date.getMonth()}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
+                            VALUES('${channelId}', ${townId}, '${townName}', '${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
         return result;
     },
 

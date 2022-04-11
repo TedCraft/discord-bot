@@ -34,7 +34,7 @@ module.exports = {
                     message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите название города!`);
                 }
 
-                setTownTimeout(client, message);
+                this.setTownTimeout(client, message);
             }
         }, 1 * 60 * 1000, client, message));
     }
