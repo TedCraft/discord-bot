@@ -14,9 +14,9 @@ module.exports = {
         let count = 1;
         if (args[0] === "all") count = serverQueue.length;
         else if (parseInt(args[0]) != 0 && parseInt(args[0]) != undefined && !isNaN(parseInt(args[0]))) count = parseInt(args[0]);
-        deleteSongs(client, message.guild.id, count - 1);
+        await deleteSongs(client, message.guild.id, count - 1);
 
-        if (client.connections.get(message.guild.id).dispatcher)
-            client.connections.get(message.guild.id).dispatcher.end();
+        if (client.audioPlayers.get(message.guild.id))
+            client.audioPlayers.get(message.guild.id).stop();
     }
 };

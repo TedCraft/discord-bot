@@ -18,7 +18,7 @@ module.exports = {
         let str = "\*\*Сейчас играет:\*\*\n";
         str += (`\[${serverQueue[0].TITLE.toString('utf8')}\]\(${serverQueue[0].URL.toString('utf8')}\) от \`${serverQueue[0].REQUEST_USER.toString('utf8')}\`\n`);
 
-        let curTime = msToTime(client.connections.get(message.guild.id).dispatcher.streamTime);
+        let curTime = msToTime(client.audioPlayers.get(message.guild.id).resource.playbackDuration);
         let lenTime = sToTime(serverQueue[0].LENGTH);
         let totTime = parseInt(serverQueue[0].LENGTH);
         while (lenTime.length > 4) {
@@ -57,6 +57,6 @@ module.exports = {
         str += `\*\*Всего песен: \`${serverQueue.length}\`. Длительность очереди: \`${sToTime(totTime)}\`\*\*`;
         embed.setDescription(str);
 
-        message.channel.send(embed);
+        message.channel.send({ embeds: [embed] });
     }
 };

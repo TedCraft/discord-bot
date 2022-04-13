@@ -4,7 +4,7 @@ var path = require("path");
 
 client.commands = new Collection();
 
-client.connections = new Map();
+client.audioPlayers = new Map();
 
 client.timers = new Map();
 

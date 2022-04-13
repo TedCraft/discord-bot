@@ -1,6 +1,8 @@
 const ytdl = require('discord-ytdl-core');
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
+const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus,
+    createAudioPlayer, AudioPlayerStatus, createAudioResource } = require('@discordjs/voice');
 const { insertSong, deleteSongs, getSongs } = require('../../src/database/database');
 
 module.exports = {
@@ -59,10 +61,15 @@ module.exports = {
             }
         }
 
-        if (!client.connections.get(message.guild.id) || !client.connections.get(message.guild.id).dispatcher) {
-            var connection = await voiceChannel.join();
-            client.connections.set(message.guild.id, connection);
-            play(client, message.guild, song)
+        if (!getVoiceConnection(message.guild.id)) {
+            const connection = await joinVoiceChannel({
+                channelId: voiceChannel.id,
+                guildId: message.guild.id,
+                adapterCreator: message.guild.voiceAdapterCreator,
+            });
+            connection.on(VoiceConnectionStatus.Ready, () => {
+                play(client, message.guild, song);
+            });
         }
         count == 1 && !isNaN(parseInt(count)) ?
             message.channel.send(`\`${song.title}\` добавлена в очередь`) :
@@ -123,36 +130,52 @@ async function getSongFromInfo(songInfo, message) {
 
 async function play(client, guild, song) {
     if (!song) {
-        guild.me.voice.channel.leave();
-        client.connections.delete(guild.id);
+        const songs = await getSongs(client, guild.id);
+        if (songs.length == 0) {
+            getVoiceConnection(guild.id).destroy();
+            client.audioPlayers.get(guild.id).audioPlayer.stop();
+        }
         return;
     }
 
     if (song.url != null) {
-        client.connections.get(guild.id).play(ytdl(song.url, { filter: "audioonly", opusEncoded: true, highWaterMark: 1 << 25 }), { type: 'opus' })
-            .on('finish', () => {
-                toNewSong(client, guild, song).catch(err => {
-                    console.log(err);
-                });
-            })
-            .on('error', (error) => {
-                console.error(error);
-                toNewSong(client, guild, song).catch(err => {
+        var player = client.audioPlayers.get(guild.id);
+        if (!player) {
+            player = createAudioPlayer();
+            getVoiceConnection(guild.id).subscribe(player);
+            client.audioPlayers.set(guild.id, player);
+
+            player.on('error', error => {
+                console.log(error);
+                toNewSong(client, guild).catch(err => {
                     console.log(err);
                 });
             });
+
+            player.on(AudioPlayerStatus.Idle, async () => {
+                toNewSong(client, guild).catch(err => {
+                    console.log(err);
+                });
+            });
+        }
+
+        const audioResource = createAudioResource(ytdl(song.url, { filter: "audioonly", opusEncoded: true, highWaterMark: 1 << 25 }));
+        player.resource = audioResource;
+        player.play(audioResource);
     }
 }
 
-async function toNewSong(client, guild, song) {
+async function toNewSong(client, guild) {
     await deleteSongs(client, guild.id);
     const newSong = await getSongs(client, guild.id, 1, 1);
     if (newSong[0]) {
-        song.title = newSong[0].TITLE.toString('utf8');
-        song.url = newSong[0].URL.toString('utf8');
-        song.thumbnail = newSong[0].THUMBNAIL_URL.toString('utf8');
-        song.length = newSong[0].LENGTH;
-        song.user = newSong[0].REQUEST_USER.toString('utf8');
+        song = {
+            title: newSong[0].TITLE.toString('utf8'),
+            url: newSong[0].URL.toString('utf8'),
+            user: newSong[0].THUMBNAIL_URL.toString('utf8'),
+            thumbnail: newSong[0].LENGTH,
+            length: newSong[0].REQUEST_USER.toString('utf8')
+        }
         play(client, guild, song);
     }
     else {

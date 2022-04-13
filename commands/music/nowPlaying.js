@@ -16,7 +16,7 @@ module.exports = {
         embed.setTitle('Сейчас играет');
 
         let str = (`\[${serverQueue[0].TITLE.toString('utf8')}\]\(${serverQueue[0].URL.toString('utf8')}\)\n`);
-        let curTime = msToTime(client.connections.get(message.guild.id).dispatcher.streamTime)
+        let curTime = msToTime(client.audioPlayers.get(message.guild.id).resource.playbackDuration);
         let lenTime = sToTime(serverQueue[0].LENGTH);
 
         while (lenTime.length > 4) {
@@ -31,10 +31,10 @@ module.exports = {
         str += `${curTime} / ${lenTime}`
         embed.setDescription(str);
 
-        embed.setFooter(`от ${serverQueue[0].REQUEST_USER.toString('utf8')}`);
+        embed.setFooter({ text: `от ${serverQueue[0].REQUEST_USER.toString('utf8')}` });
 
         embed.setThumbnail(serverQueue[0].THUMBNAIL_URL.toString('utf8'));
 
-        message.channel.send(embed);
+        message.channel.send({ embeds: [embed] });
     }
 };

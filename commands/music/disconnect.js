@@ -1,4 +1,5 @@
 const { deleteSongs, getAllSongs } = require('../../src/database/database');
+const { getVoiceConnection } = require('@discordjs/voice');
 
 module.exports = {
     name: 'disconnect',
@@ -11,8 +12,9 @@ module.exports = {
         
         const serverQueue = await getAllSongs(client, message.guild.id);
         await deleteSongs(client, message.guild.id, serverQueue.length);
-        if (!client.connections.get(message.guild.id) || !client.connections.get(message.guild.id).dispatcher) return message.channel.send(`${message.author} Бот ничего не играет!`);
+        if (!getVoiceConnection(message.guild.id)) return message.channel.send(`${message.author} Бот ничего не играет!`);
 
-        client.connections.get(message.guild.id).dispatcher.end();
+        getVoiceConnection(message.guild.id).destroy();
+        client.audioPlayers.get(message.guild.id).stop();
     }
 };
