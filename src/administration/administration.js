@@ -20,7 +20,7 @@ module.exports = {
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             for (const j in badWords) {
-                if (args[i].includes(badWords[j])) return args[j];
+                if (args[i].includes(badWords[j])) return args[i];
             }
         }
         return undefined;
