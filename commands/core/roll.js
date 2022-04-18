@@ -1,34 +1,20 @@
-const {getRandomInRange} = require('../../src/utility/random');
+const { getRandomInRange } = require('../../src/utility/random');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'roll',
-    aliases: [],
-    voice: false,
-    
-    async execute(client, message, args) {
-        try {
-            if (args.length === 0) {
-                message.channel.send(`${message.author} rolls (1-100): ${getRandomInRange(1, 100)}`);
-            }
-            else if (args.length === 1) {
-                if (!isNaN(parseInt(args[0])))
-                    message.channel.send(`${message.author} rolls (1-${parseInt(args[0])}): ${getRandomInRange(1, parseInt(args[0]))}`);
-                else
-                    message.channel.send(`${message.author} rolls (1-100): ${getRandomInRange(1, 100)}`);
-            }
-            else {
-                if (!isNaN(parseInt(args[0])) && !isNaN(parseInt(args[1])))
-                    message.channel.send(`${message.author} rolls (${parseInt(args[0])}-${parseInt(args[1])}): ${getRandomInRange(parseInt(args[0]), parseInt(args[1]))}`);
+    data: new SlashCommandBuilder()
+        .setName('roll')
+        .setDescription('Получает случайное число.')
+        .addIntegerOption(option =>
+            option.setName('from')
+                .setDescription('От какого числа.'))
+        .addIntegerOption(option =>
+            option.setName('to')
+                .setDescription('до какого числа.')),
 
-                else if (!isNaN(parseInt(args[0])))
-                    message.channel.send(`${message.author} rolls (1-${parseInt(args[0])}): ${getRandomInRange(1, parseInt(args[0]))}`);
-
-                else
-                    message.channel.send(`${message.author} rolls (1-100): ${getRandomInRange(1, 100)}`);
-            }
-        }
-        catch (err) {
-            console.log(err);
-        };
+    async execute(client, interaction) {
+        const from = interaction.options.getInteger('from') != null ? interaction.options.getInteger('from') : 1;
+        const to = interaction.options.getInteger('to') != null ? interaction.options.getInteger('to') : 100;
+        interaction.reply({ content: `roll (${from}-${to}): ${getRandomInRange(from, to)}`, ephemeral: false }).catch(err => { });
     }
 };

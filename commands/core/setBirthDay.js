@@ -1,27 +1,40 @@
 const { updateBirthdayUser, getUser } = require('../../src/database/database');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'setbirthday',
-    aliases: ['setbday'],
-    voice: false,
+    data: new SlashCommandBuilder()
+        .setName('birthday')
+        .setDescription('Управление датой дня рождения.')
+        .addSubcommand(subcommand =>
+            subcommand.setName('set')
+                .setDescription('Устанавливает дату рождения.')
+                .addIntegerOption(option =>
+                    option.setName('day')
+                        .setDescription('День рождения.')
+                        .setRequired(true)
+                        .setMinValue(1)
+                        .setMaxValue(31))
+                .addIntegerOption(option =>
+                    option.setName('month')
+                        .setDescription('Месяц рождения.')
+                        .setRequired(true)
+                        .setMinValue(1)
+                        .setMaxValue(12))),
 
-    async execute(client, message, args) {
-        if (args.length == 0) return message.channel.send(`${message.author} Введите дату!`);
-        if (args[1] == undefined || isNaN(parseInt(args[1])) ||
-            parseInt(args[1]) < 1 || parseInt(args[1]) > 12) {
-            return message.channel.send(`${message.author} Введите корректный месяц!`);
-        }
-        if (args[0] == undefined || isNaN(parseInt(args[0])) ||
-            parseInt(args[0]) < 1 || parseInt(args[0]) > new Date(0, parseInt(args[1]) + 1, 0).getDate()) {
-            return message.channel.send(`${message.author} Введите корректный день!`);
+    async execute(client, interaction) {
+        const day = interaction.options.getInteger('day'),
+            month = interaction.options.getInteger('month');
+
+        if (day > new Date(0, 0, day + 1).getDate()) {
+            return interaction.reply({ content: `Введите корректный день!`, ephemeral: true });
         }
 
-        const user = await getUser(client, message.author.id);
+        const user = await getUser(client, interaction.user.id);
         if (user.LAST_CHANGE_BDAY != null && Math.ceil((Date.now() - new Date(user.LAST_CHANGE_BDAY)) / (1000 * 60 * 60 * 24)) < 356)
-            return message.channel.send(`${message.author} Дату рождения можно менять раз в год!`)
+            return interaction.reply({ content: `Дату рождения можно менять раз в год!`, ephemeral: true })
 
-        await updateBirthdayUser(client, message.author.id, `${args[0]}.${args[1]}.${new Date().getFullYear()}`);
+        await updateBirthdayUser(client, interaction.user.id, `${day}.${month}.${new Date().getFullYear()}`);
 
-        message.channel.send(`${message.author} Дата рождения установлена!`);
+        interaction.reply({ content: `Дата рождения установлена!`, ephemeral: true });
     }
 };

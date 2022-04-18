@@ -1,20 +1,22 @@
 const { deleteSongs, getAllSongs } = require('../../src/database/database');
 const { getVoiceConnection } = require('@discordjs/voice');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'disconnect',
-    aliases: ['d'],
-    voice: true,
+    data: new SlashCommandBuilder()
+        .setName('disconnect')
+        .setDescription('Очищает музыкальную очередь и отключает бота.'),
 
-    async execute(client, message, args) {
-        const voiceChannel = message.guild.me.voice.channel != undefined ? message.guild.me.voice.channel : message.member.voice.channel;
-        if (!voiceChannel) return message.channel.send(`${message.author} зайди в войс канал`);
-        
-        const serverQueue = await getAllSongs(client, message.guild.id);
-        await deleteSongs(client, message.guild.id, serverQueue.length);
-        if (!getVoiceConnection(message.guild.id)) return message.channel.send(`${message.author} Бот ничего не играет!`);
+    async execute(client, interaction) {
+        const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
+        if (!voiceChannel) return interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
 
-        getVoiceConnection(message.guild.id).destroy();
-        client.audioPlayers.get(message.guild.id).stop();
+        const serverQueue = await getAllSongs(client, interaction.guildId);
+        await deleteSongs(client, interaction.guildId, serverQueue.length);
+        if (!getVoiceConnection(interaction.guildId)) return interaction.reply({ content: `Бот ничего не играет!`, ephemeral: false });
+
+        client.audioPlayers.get(interaction.guildId).stop();
+        //getVoiceConnection(interaction.guildId).destroy();
+        interaction.reply({ content: `Отключаюсь.`, ephemeral: false });
     }
 };

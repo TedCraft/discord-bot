@@ -1,16 +1,14 @@
 const { getRandomInRange } = require('../../src/utility/random');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'coinflip',
-    aliases: ['cf'],
-    voice: false,
+    data: new SlashCommandBuilder()
+        .setName('coinflip')
+        .setDescription('Подбрасывает монетку.'),
 
-    async execute(client, message, args) {
-        if(getRandomInRange(1, 2) == 1) {
-            message.channel.send(`${message.author} Орёл!`);
-        }
-        else {
-            message.channel.send(`${message.author} Решка!`);
-        }
+    async execute(client, interaction) {
+        getRandomInRange(1, 2) == 1 ?
+            interaction.reply({ content: `Орёл!`, ephemeral: false }) :
+            interaction.reply({ content: `Решка!`, ephemeral: false });
     }
 };

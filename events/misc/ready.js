@@ -1,13 +1,13 @@
 const { getServersId, insertServer, deleteServer,
     connectToDatabase,
     getUsersId, insertUser, deleteUser,
-    getServerUsers, insertServerUser, insertTown, insertTownAlt } = require('../../src/database/database');
-
+    getServerUsers, insertServerUser, insertTown, insertTownAlt, getServerCommands } = require('../../src/database/database');
 const { readFileSync } = require('fs');
-
 const { checkBirthDays } = require('../../src/administration/administration');
-
 const { scheduleJob } = require("node-schedule");
+const { Routes } = require('discord-api-types/v9');
+const { REST } = require('@discordjs/rest');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = async (client) => {
     console.log(`\nLogged to the client ${client.user.username}\n-> Ready on ${client.guilds.cache.size} servers for a total of ${client.users.cache.size} users`);
@@ -17,7 +17,7 @@ module.exports = async (client) => {
     client.db = await connectToDatabase(client);
     await checkDatabase(client);
     console.log(`Database check successful!`);
-    
+
     /*let temp = readFileSync("C:\\Users\\User\\Desktop\\cities500\\cities500.txt", "utf8");
     temp = temp.split("\n");
     let n = 1;
@@ -34,6 +34,41 @@ module.exports = async (client) => {
 
     await checkBirthDays(client);
     scheduleJob('0 0 * * *', () => { checkBirthDays(client) });
+
+    const rest = new REST({ version: '9' }).setToken(client.config.app.token);
+    await (async () => {
+        try {
+            console.log('\nStarted refreshing application (/) commands.');
+
+            //client.application.commands.cache.delete();
+            await rest.put(
+                Routes.applicationCommands(client.user.id),
+                { body: client.commands.map(item => item.data.toJSON()) },
+            );
+            //client.application.commands.set(client.commands.map(item => item.data.toJSON()))
+
+            console.log('Successfully reloaded application (/) commands.');
+        } catch (error) {
+            console.error(error);
+        }
+    })();
+
+    const guildsId = client.guilds.cache.map(guild => guild.id);
+    for (const i in guildsId) {
+        const commands = await getServerCommands(client, guildsId[i]);
+        const jsonCommands = commands.map(item => new SlashCommandBuilder().setName(item.COMMAND.toString('utf8')).setDescription('Кастомная команда.').toJSON());
+
+        await (async () => {
+            try {
+                await rest.put(
+                    Routes.applicationGuildCommands(client.user.id, guildsId[i]),
+                    { body: jsonCommands },
+                );
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+    }
 };
 
 async function checkDatabase(client) {
@@ -59,7 +94,8 @@ async function checkDatabase(client) {
     const serverList = client.guilds.cache.map(guild => guild);
     const dbUsersIDList = await getUsersId(client);
     for (const i in serverList) {
-        const usersIdList = serverList[i].members.cache.filter(member => !member.user.bot).map(member => member.id);
+        const users = await serverList[i].members.fetch();
+        const usersIdList = users.filter(member => !member.user.bot).map(member => member.id);
         const dbServerUsers = await getServerUsers(client, serverList[i].id);
         for (const j in usersIdList) {
             if (!dbUsersIDList.includes(usersIdList[j])) {

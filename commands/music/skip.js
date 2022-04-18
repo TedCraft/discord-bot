@@ -1,22 +1,28 @@
 const { deleteSongs, getAllSongs } = require('../../src/database/database');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'skip',
-    aliases: ['s'],
-    voice: true,
+    data: new SlashCommandBuilder()
+        .setName('skip')
+        .setDescription('Копирует композицию в очереди.')
+        .addIntegerOption(option =>
+            option.setName('count')
+                .setDescription('Число копий.')
+                .setMinValue(1)),
 
-    async execute(client, message, args) {
-        const voiceChannel = message.guild.me.voice.channel != undefined ? message.guild.me.voice.channel : message.member.voice.channel;
-        if (!voiceChannel) return message.channel.send(`${message.author} зайди в войс канал`);
-        const serverQueue = await getAllSongs(client, message.guild.id);
-        if (serverQueue.length == 0) return message.channel.send(`${message.author} В очереди пусто`);
+    async execute(client, interaction) {
+        const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
+        if (!voiceChannel) return interaction.reply({content: `зайди в войс канал`, ephemeral: true});
 
-        let count = 1;
-        if (args[0] === "all") count = serverQueue.length;
-        else if (parseInt(args[0]) != 0 && parseInt(args[0]) != undefined && !isNaN(parseInt(args[0]))) count = parseInt(args[0]);
-        await deleteSongs(client, message.guild.id, count - 1);
+        const serverQueue = await getAllSongs(client, interaction.guildId);
+        if (serverQueue.length == 0) return interaction.reply({content: `В очереди пусто`, ephemeral: true});
 
-        if (client.audioPlayers.get(message.guild.id))
-            client.audioPlayers.get(message.guild.id).stop();
+        const count = interaction.options.getInteger('count') != null ? interaction.options.getInteger('count') : 1 ;
+
+        await deleteSongs(client, interaction.guildId, count);
+
+        if (client.audioPlayers.get(interaction.guildId))
+            client.audioPlayers.get(interaction.guildId).stop();
+        interaction.reply({content: `Вы пропустили ${count} композиций.`, ephemeral: false});
     }
 };

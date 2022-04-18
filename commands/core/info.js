@@ -1,18 +1,19 @@
 const { getInfo } = require('../../src/database/database');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'info',
-    aliases: [],
-    voice: false,
+    data: new SlashCommandBuilder()
+        .setName('info')
+        .setDescription('Информация о сервере.'),
 
-    async execute(client, message, args) {
-        const server = await getInfo(client, message.guild.id);
+    async execute(client, interaction) {
+        const server = await getInfo(client, interaction.guildId);
 
         if (server) {
-            message.channel.send(server.INFO.toString('utf8'));
+            interaction.reply({ content: server.INFO.toString('utf8'), ephemeral: true });
         }
         else {
-            message.channel.send(`${message.author} Похоже, информации о сервере нет.`);
+            interaction.reply({ content: `Похоже, информации о сервере нет.`, ephemeral: true });
         }
     }
 };

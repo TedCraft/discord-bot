@@ -1,18 +1,19 @@
 const { getRules } = require('../../src/database/database');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'rules',
-    aliases: [],
-    voice: false,
+    data: new SlashCommandBuilder()
+        .setName('rules')
+        .setDescription('Правила сервера.'),
 
-    async execute(client, message, args) {
-        const server = await getRules(client, message.guild.id);
+    async execute(client, interaction) {
+        const server = await getRules(client, interaction.guildId);
 
         if (server) {
-            message.channel.send(server.RULES.toString('utf8'));
+            interaction.reply({ content: server.RULES.toString('utf8'), ephemeral: true });
         }
         else {
-            message.channel.send(`${message.author} Похоже, правил на сервере нет.`);
+            interaction.reply({ content: `Похоже, правил на сервере нет.`, ephemeral: true });
         }
     }
 };

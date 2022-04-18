@@ -8,7 +8,7 @@ module.exports = async (client, user_new) => {
     const dbUserServers = await getUserServers(client, user_new.id);
     for(const i in dbUserServers) {
         const guild = client.guilds.cache.get(dbUserServers[i]);
-        const member = guild.members.cache.get(user_new.id);
+        const member = await guild.members.fetch(user_new.id);
         if(!member.manageable) return;
         
         if(member.nickname == null) {

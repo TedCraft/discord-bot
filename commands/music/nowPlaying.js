@@ -1,22 +1,23 @@
 const { msToTime, sToTime } = require('../../src/utility/time');
 const { getSongs } = require('../../src/database/database');
 const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'nowplaying',
-    aliases: ['np'],
-    voice: true,
+    data: new SlashCommandBuilder()
+        .setName('now_playing')
+        .setDescription('Текущая композиция в очереди.'),
 
-    async execute(client, message, args) {
-        const serverQueue = await getSongs(client, message.guild.id);
-        if (serverQueue.length == 0) return message.channel.send(`${message.author} В очереди пусто`);
+    async execute(client, interaction) {
+        const serverQueue = await getSongs(client, interaction.guildId);
+        if (serverQueue.length == 0) return interaction.reply({ content: `В очереди пусто`, ephemeral: false });
 
         const embed = new MessageEmbed();
         embed.setColor('RED');
         embed.setTitle('Сейчас играет');
 
         let str = (`\[${serverQueue[0].TITLE.toString('utf8')}\]\(${serverQueue[0].URL.toString('utf8')}\)\n`);
-        let curTime = msToTime(client.audioPlayers.get(message.guild.id).resource.playbackDuration);
+        let curTime = msToTime(client.audioPlayers.get(interaction.guildId).resource.playbackDuration);
         let lenTime = sToTime(serverQueue[0].LENGTH);
 
         while (lenTime.length > 4) {
@@ -35,6 +36,6 @@ module.exports = {
 
         embed.setThumbnail(serverQueue[0].THUMBNAIL_URL.toString('utf8'));
 
-        message.channel.send({ embeds: [embed] });
+        interaction.reply({ embeds: [embed], ephemeral: false });
     }
 };

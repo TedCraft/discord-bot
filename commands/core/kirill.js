@@ -1,13 +1,21 @@
 const { createCanvas, loadImage } = require('canvas')
 const { MessageAttachment } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'кирилл',
-    aliases: ['торч', 'друг', 'брух', 'bruh'],
-    voice: false,
-    
-    async execute(client, message) {
-        const command = message.content.slice(client.config.app.prefix.length).split(' ').shift().toLowerCase();
+    data: new SlashCommandBuilder()
+        .setName('гдекирилл')
+        .setDescription('Информация о кирилле.')
+        .addStringOption(option =>
+            option.setName('обращение')
+                .setDescription('Обращение.')
+                .addChoice('торч', 'торч')
+                .addChoice('друг', 'друг')
+                .addChoice('брух', 'брух')
+                .addChoice('bruh', 'bruh')),
+
+    async execute(client, interaction) {
+        const command = interaction.options.getString('обращение') != undefined ? interaction.options.getString('обращение') : 'кирилл';
         const startDate = new Date("06/28/2021");
         const dateDiff = Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         var word;
@@ -25,15 +33,15 @@ module.exports = {
 
         switch (command) {
             case "кирилл":
-                message.channel.send(`Кирилл в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`);
+                interaction.reply({ content: `Кирилл в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "торч":
-                message.channel.send(`Торч в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`);
+                interaction.reply({ content: `Торч в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "друг":
-                message.channel.send(`Друг умер \`${dateDiff}\` ${word} назад :pleading_face::point_right::point_left:`);
+                interaction.reply({ content: `Друг умер \`${dateDiff}\` ${word} назад :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "bruh":
@@ -53,7 +61,7 @@ module.exports = {
                         const length2 = ctx.measureText("НАЗАД").width;
                         ctx.fillText("НАЗАД", 580 + Math.round(length1 / 2) - Math.round(length2 / 2), 380);
 
-                        message.channel.send(new MessageAttachment(canvas.createPNGStream()));
+                        interaction.reply({ files: [new MessageAttachment(canvas.createPNGStream())], ephemeral: false });
                     });
                 break;
 

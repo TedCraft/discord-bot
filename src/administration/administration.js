@@ -6,7 +6,6 @@ const { MessageAttachment } = require('discord.js');
 const { replaceWith } = require('../utility/string');
 const { setTownTimeout } = require('../utility/timer');
 const { get } = require('got');
-const { loadImage } = require('canvas')
 
 module.exports = {
     async checkBadWordsAbsolute(client, guildId, args) {
@@ -21,7 +20,7 @@ module.exports = {
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             for (const j in badWords) {
-                if (args[i].includes(badWords[j])) return badWords[j];
+                if (args[i].includes(badWords[j])) return args[j];
             }
         }
         return undefined;
@@ -55,7 +54,7 @@ module.exports = {
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
-                const member = guild.members.cache.get(usersID[i]);
+                const member = await guild.members.fetch(usersID[i]);
                 if (!member.roles.cache.has(role.id)) {
                     member.roles.add(role);
                     console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`);
@@ -71,7 +70,7 @@ module.exports = {
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
-                const member = guild.members.cache.get(usersOldID[i]);
+                const member = await guild.members.fetch(usersOldID[i]);
                 if (member.roles.cache.has(role.id)) {
                     member.roles.remove(role);
                     console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`);
@@ -87,60 +86,59 @@ module.exports = {
     },
 
     async checkGame(client, message) {
-        const game = await getGame(client, message.channel.id);
+        const game = await getGame(client, message.channelId);
         if (!game || !game.IS_START) return;
 
-        const gamePlayers = await getGamePlayers(client, message.channel.id);
+        const gamePlayers = await getGamePlayers(client, message.channelId);
         if (gamePlayers[game.TURN - 1].USER_ID.toString('utf8') != message.author.id)
-            return message.channel.send(`${message.author} Сейчас не ваша очередь!`);
+            return message.reply(`Сейчас не ваша очередь!`);
 
         const args = message.content.trim().split(/ +/g);
         const place = await getTownAndAlts(client, args[0].toLowerCase());
-        if (!place) return message.channel.send(`${message.author} Такого города нет!`);
+        if (!place) return message.reply(`Такого города нет!`);
 
-        const town = await getTownGame(client, message.channel.id, place.TOWN_ID);
-        if (town) return message.channel.send(`${message.author} Город ${args[0]} уже был!`);
+        const town = await getTownGame(client, message.channelId, place.TOWN_ID);
+        if (town) return message.reply(`Город \`${args[0]}\` уже был!`);
 
-        const lastTown = await getLastTownGame(client, message.channel.id)
+        const lastTown = await getLastTownGame(client, message.channelId)
         const letters = ["ь", "ъ", "ы"];
         if (lastTown) {
             const lastTownName = lastTown.GAME_NAME.toString('utf8');
             const letter = !letters.includes(lastTownName.slice(-1)) ? lastTownName.slice(-1) : lastTownName.slice(-2, -1);
-            if (args[0][0].toLowerCase() != letter) return message.channel.send(`${message.author} Город должен начинаться с буквы ${letter.toUpperCase()}!`);
+            if (args[0][0].toLowerCase() != letter) return message.reply(`Город должен начинаться с буквы \`${letter.toUpperCase()}\`!`);
         }
 
-        await insertGameTown(client, message.channel.id, place.TOWN_ID, args[0]);
+        await insertGameTown(client, message.channelId, place.TOWN_ID, args[0]);
         try {
-            clearInterval(client.timers.get(message.channel.id));
+            clearInterval(client.timers.get(message.channelId));
         }
         catch (ex) {
             console.log(ex);
         }
         const newTurn = game.TURN == gamePlayers.length ? 1 : game.TURN + 1;
-        await updateGameTurn(client, message.channel.id, newTurn)
+        await updateGameTurn(client, message.channelId, newTurn)
         setTownTimeout(client, message);
         message.channel.send(`<@${gamePlayers[newTurn - 1].USER_ID.toString('utf8')}> Напишите город на букву \`${(!letters.includes(args[0].slice(-1)) ? args[0].slice(-1) : args[0].slice(-2, -1)).toUpperCase()}\`!`);
     },
 
-    async executeCustomCommands(client, message, command) {
+    async executeCustomCommands(client, interaction, command) {
         var str;
-        var image;
+        var image = [];
         if (command.IMAGE_URL) {
-            image = new MessageAttachment(command.IMAGE_URL.toString('utf8'));
-        }
-        if (command.SONG_URL) {
-            const cmd = client.commands.get("play");
-            cmd.execute(client, message, [command.SONG_URL.toString('utf8')]).catch(err => {
-                message.channel.send("Отказано");
-                console.log(err);
-            });
+            image.push(new MessageAttachment(command.IMAGE_URL.toString('utf8')));
         }
         if (command.TEXT) {
             str = command.TEXT.toString('utf8');
         }
-
-        if (str != undefined || image != undefined) {
-            message.channel.send(str, image);
+        const mark = str != undefined || image.length != 0;
+        if (mark) {
+            interaction.reply({ content: str, files: image, ephemeral: false });
+        }
+        if (command.SONG_URL) {
+            const cmd = client.commands.get("play");
+            cmd.execute(client, interaction, command.SONG_URL.toString('utf8'), !mark).catch(err => {
+                console.log(err);
+            });
         }
     },
 };

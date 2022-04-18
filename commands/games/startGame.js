@@ -1,56 +1,80 @@
 const { getGameType, insertGame, updateGameStart, getGame, deleteGame, insertGamePlayer, deleteGamePlayers, deleteGameTowns } = require('../../src/database/database');
 const { msToTime } = require('../../src/utility/time');
 const { setTownTimeout } = require('../../src/utility/timer');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
-    name: 'startgame',
-    aliases: ['startg', 'sg'],
-    voice: false,
+    data: new SlashCommandBuilder()
+        .setName('startgame')
+        .setDescription('Начинает игру.')
+        .addStringOption(option =>
+            option.setName('game')
+                .setDescription('Название игры.')
+                .addChoice('города', 'города')
+                .setRequired(true))
+        .addIntegerOption(option =>
+            option.setName('minutes')
+                .setDescription('Минуты до начала.')
+                .setMinValue(1)
+                .setMaxValue(15))
+        .addIntegerOption(option =>
+            option.setName('seconds')
+                .setDescription('Секунды до начала.')
+                .setMinValue(1)
+                .setMaxValue(59)),
 
-    async execute(client, message, args) {
-        if (args.length == 0) return message.channel.send(`${message.author} Введите название игры!`);
-        const time = args[1] != undefined ? args[1].split(":") : [];
-        let minutes = !isNaN(parseInt(time[0])) ? parseInt(time[0]) : 5;
-        let seconds = !isNaN(parseInt(time[1])) ? parseInt(time[1]) : 0;
+    async execute(client, interaction) {
+        switch (interaction.options.getString('game')) {
+            case 'города':
+                towns(client, interaction);
+                break;
+            default:
+                interaction.reply({ content: `Название игры указано неправильно.`, ephemeral: true });
+                break;
+        }
 
-        if (seconds > 59 || seconds < 0 || minutes < 0) return message.channel.send(`${message.author} Введите корректное время!`);
-        if (minutes > 15) minutes = 15;
-
-        const game = args[0].toLowerCase();
-        const gameType = await getGameType(client, game);
-        if (!gameType) return message.channel.send(`${message.author} Игры с названием \`${game}\` не существует!`);
-        if (await getGame(client, message.channel.id))
-            return message.channel.send(`${message.author} Игра с названием \`${game}\` уже зарегестрирована в данном канале!`);
-
-        const msg = await message.channel.send(`Игра \`${game}\` начнётся через ${(minutes < 10) ? "0" + minutes : minutes}:${(seconds < 10) ? "0" + seconds : seconds} (${msToTime(new Date().getTime() + minutes * 60 * 1000 + seconds * 1000 + 3 * 60 * 60 * 1000)}). Если вы хотите принять участие, нажмите на :white_check_mark:`);
-        await msg.react("✅");
-        await insertGame(client, message.channel.id, message.guild.id, gameType.GAME_TYPE_ID);
-
-        await msg.awaitReactions((reaction, user) => !user.bot && reaction.emoji.name == "✅",
-            { time: (minutes * 60 * 1000 + seconds * 1000) })
-            .then(async (collected) => {
-                const users = collected.first().users.cache.filter(User => !User.bot);
-                if (users.size < 2) {
-                    msg.edit(`Недостаточно пользователей!`);
-                    await deleteGamePlayers(client, message.channel.id);
-                    await deleteGameTowns(client, message.channel.id);
-                    await deleteGame(client, message.channel.id);
-                }
-                else {
-                    await updateGameStart(client, message.channel.id)
-                    for (const user of users) {
-                        await insertGamePlayer(client, message.channel.id, user[0]);
-                    }
-                    msg.edit(`Рыба-карась, игра \`${game}\` началась!`);
-                    message.channel.send(`Игрок ${message.author}, начинайте!`);
-                    setTownTimeout(client, message);
-                }
-            })
-            .catch(async (ex) => {
-                msg.edit(`Недостаточно пользователей!`);
-                await deleteGamePlayers(client, message.channel.id);
-                await deleteGameTowns(client, message.channel.id);
-                await deleteGame(client, message.channel.id);
-            });
     }
 };
+
+async function towns(client, interaction) {
+    const minutes = interaction.options.getInteger('minutes') != null ? interaction.options.getInteger('minutes') : 0;
+    const seconds = interaction.options.getInteger('seconds') != null ? interaction.options.getInteger('seconds') : 15;
+
+    const game = interaction.options.getString('game');
+    const gameType = await getGameType(client, game);
+    if (!gameType) return interaction.reply({ content: `Игры с названием \`${game}\` не существует!`, ephemeral: true });
+    if (await getGame(client, interaction.guildId))
+        return interaction.reply({ content: `Игра с названием \`${game}\` уже зарегестрирована в данном канале!`, ephemeral: true });
+
+    interaction.reply({ content: `Игра \`${game}\` начнётся через ${(minutes < 10) ? "0" + minutes : minutes}:${(seconds < 10) ? "0" + seconds : seconds} (${msToTime(new Date().getTime() + minutes * 60 * 1000 + seconds * 1000 + 3 * 60 * 60 * 1000)}). Если вы хотите принять участие, нажмите на :white_check_mark:`, ephemeral: false });
+    const msg = await interaction.fetchReply();
+    await msg.react("✅");
+    await insertGame(client, interaction.channelId, interaction.guildId, gameType.GAME_TYPE_ID);
+
+    const filter = (reaction, user) => reaction.emoji.name === "✅" && !user.bot;
+    msg.awaitReactions({ filter, time: (minutes * 60 * 1000 + seconds * 1000) })
+        .then(async (collected) => {
+            const users = await collected.first().users.cache.filter(User => !User.bot);
+            if (users.size < 2) {
+                msg.edit(`Недостаточно пользователей!`);
+                await deleteGamePlayers(client, interaction.channelId);
+                await deleteGameTowns(client, interaction.channelId);
+                await deleteGame(client, interaction.channelId);
+            }
+            else {
+                await updateGameStart(client, interaction.channelId)
+                for (const user of users) {
+                    await insertGamePlayer(client, interaction.channelId, user[0]);
+                }
+                msg.edit(`Рыба-карась, игра \`${game}\` началась!`);
+                interaction.channel.send(`Игрок ${interaction.user}, начинайте!`);
+                setTownTimeout(client, msg);
+            }
+        })
+        .catch(async (ex) => {
+            msg.edit(`Недостаточно пользователей!`);
+            await deleteGamePlayers(client, interaction.channelId);
+            await deleteGameTowns(client, interaction.channelId);
+            await deleteGame(client, interaction.channelId);
+        });
+}
