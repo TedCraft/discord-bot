@@ -25,13 +25,13 @@ module.exports = {
     async execute(client, interaction, songGiven = undefined, replying = true) {
         const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
         if (!voiceChannel) {
-            if (replying) interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
+            if (replying) await interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
             return;
         }
 
         const permissions = voiceChannel.permissionsFor(interaction.client.user);
         if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-            if (replying) interaction.reply({ content: 'Дайте права :)', ephemeral: true });
+            if (replying) await interaction.reply({ content: 'Дайте права :)', ephemeral: true });
             return;
         }
 
@@ -40,9 +40,9 @@ module.exports = {
         let song = [];
 
         const songUrl = songGiven == undefined ? interaction.options.getString('song') : songGiven,
-              text = interaction.options.getString('search_text');
+            text = interaction.options.getString('search_text');
         if (!songUrl && !text) {
-            if (replying) interaction.reply({ content: `Укажите композицию.`, ephemeral: true });
+            if (replying) await interaction.reply({ content: `Укажите композицию.`, ephemeral: true });
             return;
         }
 
@@ -56,25 +56,30 @@ module.exports = {
                     await getSongFromInfo(plSongs[i], interaction, count);
 
                 if (!getVoiceConnection(interaction.guildId) || interaction.guild.me.voice.channel == null) {
-                    var connection = await voiceChannel.join();
-                    client.connections.set(interaction.guildId, connection);
-                    play(client, interaction.guild, song);
+                    const connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: interaction.guildId,
+                        adapterCreator: interaction.guild.voiceAdapterCreator,
+                    });
+                    connection.on(VoiceConnectionStatus.Ready, async () => {
+                        await play(client, interaction.guild, song);
+                    });
                 }
-                if (replying) interaction.reply({ content: `Плейлист \`${pl.title}\` добавлен в очередь`, ephemeral: false });
+                if (replying) await interaction.reply({ content: `Плейлист \`${pl.title}\` добавлен в очередь`, ephemeral: false });
                 return;
             }
             else if (songUrl.match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
                 song = await getSong(songUrl, interaction, count);
             }
             else {
-                if (replying) interaction.reply({ content: `Ссылка введена неверно!`, ephemeral: true });
+                if (replying) await interaction.reply({ content: `Ссылка введена неверно!`, ephemeral: true });
                 return;
             }
         }
         else {
             const searchResult = await ytsr(text, { limit: 5 });
             if (searchResult.items.length == 0) {
-                if (replying) interaction.reply({ content: "Не удалось найти композицию!", ephemeral: true });
+                if (replying) await interaction.reply({ content: "Не удалось найти композицию!", ephemeral: true });
                 return;
             }
             for (const i in searchResult.items) {
@@ -86,24 +91,24 @@ module.exports = {
         }
 
         if (song.length == 0) {
-            if (replying) interaction.reply({ content: `Невозможно найти композицию!`, ephemeral: true });
+            if (replying) await interaction.reply({ content: `Невозможно найти композицию!`, ephemeral: true });
             return;
         }
 
         if (!getVoiceConnection(interaction.guildId) || interaction.guild.me.voice.channel == null) {
-            const connection = await joinVoiceChannel({
+            const connection = joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: interaction.guildId,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
             });
-            connection.on(VoiceConnectionStatus.Ready, () => {
-                play(client, interaction.guild, song);
+            connection.on(VoiceConnectionStatus.Ready, async () => {
+                await play(client, interaction.guild, song);
             });
         }
         if (replying) {
             count == 1 && !isNaN(parseInt(count)) ?
-                interaction.reply({ content: `\`${song.title}\` добавлена в очередь`, ephemeral: false }) :
-                interaction.reply({ content: `\`${song.title}\` добавлена в очередь (${count})`, ephemeral: false });
+                await interaction.reply({ content: `\`${song.title}\` добавлена в очередь`, ephemeral: false }) :
+                await interaction.reply({ content: `\`${song.title}\` добавлена в очередь (${count})`, ephemeral: false });
         }
     }
 };
@@ -118,7 +123,7 @@ async function getSong(url, interaction, count = 1) {
     }
 
     const songInfo = await ytdl.getBasicInfo(url);
-    if (songInfo.isLive) throw "Streams not allowed!";
+    if (songInfo.videoDetails.isLive || songInfo.title == undefined) return [];
 
     song.title = songInfo.videoDetails.title;
     song.url = songInfo.videoDetails.video_url;
@@ -177,15 +182,15 @@ async function play(client, guild, song) {
             getVoiceConnection(guild.id).subscribe(player);
             client.audioPlayers.set(guild.id, player);
 
-            player.on('error', error => {
+            player.on('error', async (error) => {
                 console.log(error);
-                toNewSong(client, guild).catch(err => {
+                await toNewSong(client, guild).catch(err => {
                     console.log(err);
                 });
             });
 
             player.on(AudioPlayerStatus.Idle, async () => {
-                toNewSong(client, guild).catch(err => {
+                await toNewSong(client, guild).catch(err => {
                     console.log(err);
                 });
             });
@@ -208,9 +213,9 @@ async function toNewSong(client, guild) {
             thumbnail: newSong[0].LENGTH,
             length: newSong[0].REQUEST_USER.toString('utf8')
         }
-        play(client, guild, song);
+        await play(client, guild, song);
     }
     else {
-        play(client, guild);
+        await play(client, guild);
     }
 }

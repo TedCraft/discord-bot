@@ -10,10 +10,10 @@ module.exports = {
         const server = await getInfo(client, interaction.guildId);
 
         if (server) {
-            interaction.reply({ content: server.INFO.toString('utf8'), ephemeral: true });
+            await interaction.reply({ content: server.INFO.toString('utf8'), ephemeral: true });
         }
         else {
-            interaction.reply({ content: `Похоже, информации о сервере нет.`, ephemeral: true });
+            await interaction.reply({ content: `Похоже, информации о сервере нет.`, ephemeral: true });
         }
     }
 };

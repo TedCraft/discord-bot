@@ -10,7 +10,7 @@ module.exports = {
 
     async execute(client, interaction) {
         const serverQueue = await getSongs(client, interaction.guildId);
-        if (serverQueue.length == 0) return interaction.reply({ content: `В очереди пусто`, ephemeral: false });
+        if (serverQueue.length == 0) return await interaction.reply({ content: `В очереди пусто`, ephemeral: false });
 
         const embed = new MessageEmbed();
         embed.setColor('RED');
@@ -36,6 +36,6 @@ module.exports = {
 
         embed.setThumbnail(serverQueue[0].THUMBNAIL_URL.toString('utf8'));
 
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        await interaction.reply({ embeds: [embed], ephemeral: false });
     }
 };

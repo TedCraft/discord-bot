@@ -19,10 +19,10 @@ module.exports = {
     async execute(client, interaction) {
         switch (interaction.options.getSubcommand()) {
             case 'set':
-                set(client, interaction);
+                await set(client, interaction);
                 break;
             case 'unset':
-                unset(client, interaction);
+                await unset(client, interaction);
                 break;
             default:
                 break;
@@ -32,18 +32,18 @@ module.exports = {
 
 async function set(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        return interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const info = interaction.options.getString('info');
 
     await updateInfo(client, interaction.guildId, info);
-    interaction.reply({ content: `Информация добавлена!`, ephemeral: false });
+    await interaction.reply({ content: `Информация добавлена!`, ephemeral: false });
 }
 
 async function unset(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        return interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     await deleteInfo(client, interaction.guildId);
-    interaction.reply({ content: `Информация удалена!`, ephemeral: false });
+    await interaction.reply({ content: `Информация удалена!`, ephemeral: false });
 }

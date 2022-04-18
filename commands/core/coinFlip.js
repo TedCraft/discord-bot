@@ -8,7 +8,7 @@ module.exports = {
 
     async execute(client, interaction) {
         getRandomInRange(1, 2) == 1 ?
-            interaction.reply({ content: `Орёл!`, ephemeral: false }) :
-            interaction.reply({ content: `Решка!`, ephemeral: false });
+            await interaction.reply({ content: `Орёл!`, ephemeral: false }) :
+            await interaction.reply({ content: `Решка!`, ephemeral: false });
     }
 };

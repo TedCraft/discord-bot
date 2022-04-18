@@ -12,17 +12,17 @@ module.exports = {
 
     async execute(client, interaction) {
         const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
-        if (!voiceChannel) return interaction.reply({content: `зайди в войс канал`, ephemeral: true});
+        if (!voiceChannel) return await interaction.reply({content: `зайди в войс канал`, ephemeral: true});
 
         const serverQueue = await getAllSongs(client, interaction.guildId);
-        if (serverQueue.length == 0) return interaction.reply({content: `В очереди пусто`, ephemeral: true});
+        if (serverQueue.length == 0) return await interaction.reply({content: `В очереди пусто`, ephemeral: true});
 
-        const count = interaction.options.getInteger('count') != null ? interaction.options.getInteger('count') : 1 ;
+        const count = interaction.options.getInteger('count') != null ? interaction.options.getInteger('count') - 1 : 0 ;
 
         await deleteSongs(client, interaction.guildId, count);
 
         if (client.audioPlayers.get(interaction.guildId))
             client.audioPlayers.get(interaction.guildId).stop();
-        interaction.reply({content: `Вы пропустили ${count} композиций.`, ephemeral: false});
+        await interaction.reply({content: `Вы пропустили ${count} композиций.`, ephemeral: false});
     }
 };

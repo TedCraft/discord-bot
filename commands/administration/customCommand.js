@@ -39,10 +39,10 @@ module.exports = {
     async execute(client, interaction) {
         switch (interaction.options.getSubcommand()) {
             case 'add':
-                add(client, interaction);
+                await add(client, interaction);
                 break;
             case 'delete':
-                del(client, interaction);
+                await del(client, interaction);
                 break;
             default:
                 break;
@@ -72,41 +72,41 @@ module.exports = {
 
 async function add(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const songUrl = interaction.options.getString('song'),
         imageUrl = interaction.options.getString('image'),
         text = interaction.options.getString('text'),
         command = interaction.options.getString('command').toLowerCase();
-    if (!songUrl && !imageUrl && !text) return interaction.reply({ content: `Добавьте ответ команды!`, ephemeral: true });
-    if (!/^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u.test(command)) return interaction.reply({ content: `Некорректное название комманды!`, ephemeral: true });
+    if (!songUrl && !imageUrl && !text) return await interaction.reply({ content: `Добавьте ответ команды!`, ephemeral: true });
+    if (!/^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u.test(command)) return await interaction.reply({ content: `Некорректное название комманды!`, ephemeral: true });
 
     const serverCommand = await getServerCommand(client, interaction.guildId, command);
     if (await serverCommand.length > 0 ||
         client.commands.get(command))
-        return interaction.reply({ content: `Команда ${command} уже существует!`, ephemeral: true })
+        return await interaction.reply({ content: `Команда ${command} уже существует!`, ephemeral: true })
 
     if (songUrl) {
         if (songUrl.match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/playlist\?list=)([a-zA-Z0-9-_]{34})(?:\S+)?$/) != null) {
-            await ytpl(songUrl).catch(err => {
-                return interaction.reply({ content: `Ссылка на плейлист введена неправильно!`, ephemeral: true });
+            await ytpl(songUrl).catch(async (err) => {
+                return await interaction.reply({ content: `Ссылка на плейлист введена неправильно!`, ephemeral: true });
             });
         }
         else {
-            await ytdl.getBasicInfo(songUrl).catch(err => {
-                return interaction.reply({ content: `Ссылка на композицию введена неправильно!`, ephemeral: true });
+            await ytdl.getBasicInfo(songUrl).catch(async (err) => {
+                return await interaction.reply({ content: `Ссылка на композицию введена неправильно!`, ephemeral: true });
             });
         }
     }
 
     if (imageUrl) {
-        await loadImage(imageUrl).catch(err => {
-            interaction.reply({ content: `Ссылка на изображение введена неправильно!`, ephemeral: true });
+        await loadImage(imageUrl).catch(async (err) => {
+            await interaction.reply({ content: `Ссылка на изображение введена неправильно!`, ephemeral: true });
         });
     }
 
     await insertServerCommand(client, interaction.guildId, command, songUrl, imageUrl, text);
-    interaction.reply({ content: `Команда \`${command}\` добавлена!`, ephemeral: false });
+    await interaction.reply({ content: `Команда \`${command}\` добавлена!`, ephemeral: false });
 
     const commands = await getServerCommands(client, interaction.guildId);
     const jsonCommands = commands.map(item => new SlashCommandBuilder().setName(item.COMMAND.toString('utf8')).setDescription('Кастомная команда.').toJSON());
@@ -126,16 +126,16 @@ async function add(client, interaction) {
 
 async function del(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        return interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const command = interaction.options.getString('command').toLowerCase();
 
     if (await getServerCommand(client, interaction.guildId, command) == 0)
-        return interaction.reply({ content: `Команды ${command} не существует!`, ephemeral: true })
+        return await interaction.reply({ content: `Команды ${command} не существует!`, ephemeral: true })
 
     await deleteServerCommand(client, interaction.guildId, command);
 
-    interaction.reply({ content: `Команда \`${command}\` удалена!`, ephemeral: false });
+    await interaction.reply({ content: `Команда \`${command}\` удалена!`, ephemeral: false });
 
     const commands = await getServerCommands(client, interaction.guildId);
     commands.splice(commands.findIndex(cmd => cmd.COMMAND.toString('utf8') == command));

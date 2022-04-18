@@ -4,8 +4,13 @@ const { replaceWith } = require('../../src/utility/string');
 module.exports = async (client, message) => {
     if (message.author.bot || message.channel.type === 'dm') return;
 
-    if (await checkMessage(client, message)) return;
-    await checkGame(client, message);
+    try {
+        if (await checkMessage(client, message)) return;
+        await checkGame(client, message);
+    }
+    catch (err) {
+        console.log(err);
+    }
 };
 
 async function checkMessage(client, message) {
