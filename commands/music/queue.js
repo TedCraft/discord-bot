@@ -10,7 +10,7 @@ module.exports = {
 
     async execute(client, interaction) {
         const serverQueue = await getAllSongs(client, interaction.guildId);
-        if (serverQueue.length == 0) return interaction.reply({ content: `Очередь пуста`, ephemeral: true });
+        if (serverQueue.length == 0) return await interaction.reply({ content: `Очередь пуста`, ephemeral: true });
 
         const embed = new MessageEmbed();
         embed.setColor('PURPLE');
@@ -58,6 +58,6 @@ module.exports = {
         str += `\*\*Всего песен: \`${serverQueue.length}\`. Длительность очереди: \`${sToTime(totTime)}\`\*\*`;
         embed.setDescription(str);
 
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        await interaction.reply({ embeds: [embed], ephemeral: false });
     }
 };

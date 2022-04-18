@@ -33,36 +33,34 @@ module.exports = {
 
         switch (command) {
             case "кирилл":
-                interaction.reply({ content: `Кирилл в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
+                await interaction.reply({ content: `Кирилл в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "торч":
-                interaction.reply({ content: `Торч в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
+                await interaction.reply({ content: `Торч в армии уже \`${dateDiff}\` ${word} :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "друг":
-                interaction.reply({ content: `Друг умер \`${dateDiff}\` ${word} назад :pleading_face::point_right::point_left:`, ephemeral: false });
+                await interaction.reply({ content: `Друг умер \`${dateDiff}\` ${word} назад :pleading_face::point_right::point_left:`, ephemeral: false });
                 break;
 
             case "bruh":
             case "брух":
                 const canvas = createCanvas(1229, 676);
                 const ctx = canvas.getContext('2d');
-                loadImage("https://sun9-40.userapi.com/impg/tYHsSP88pDkutFum3v7ycVPc53uS9olIIzs0FQ/lcev26S1tDY.jpg?size=1229x676&quality=96&sign=48d45eda0516a155a7aae90cb8fc8314&type=album")
-                    .then((image) => {
-                        ctx.drawImage(image, 0, 0, 1229, 676);
+                const image = await loadImage("https://sun9-40.userapi.com/impg/tYHsSP88pDkutFum3v7ycVPc53uS9olIIzs0FQ/lcev26S1tDY.jpg?size=1229x676&quality=96&sign=48d45eda0516a155a7aae90cb8fc8314&type=album")
+                ctx.drawImage(image, 0, 0, 1229, 676);
 
-                        const text = `я умер ${dateDiff} ${word}`;
-                        ctx.font = '70px Arial';
-                        ctx.fillStyle = '#000';
-                        ctx.fillText(text.toUpperCase(), 580, 300);
+                const text = `я умер ${dateDiff} ${word}`;
+                ctx.font = '70px Arial';
+                ctx.fillStyle = '#000';
+                ctx.fillText(text.toUpperCase(), 580, 300);
 
-                        const length1 = ctx.measureText(text.toUpperCase()).width;
-                        const length2 = ctx.measureText("НАЗАД").width;
-                        ctx.fillText("НАЗАД", 580 + Math.round(length1 / 2) - Math.round(length2 / 2), 380);
+                const length1 = ctx.measureText(text.toUpperCase()).width;
+                const length2 = ctx.measureText("НАЗАД").width;
+                ctx.fillText("НАЗАД", 580 + Math.round(length1 / 2) - Math.round(length2 / 2), 380);
 
-                        interaction.reply({ files: [new MessageAttachment(canvas.createPNGStream())], ephemeral: false });
-                    });
+                await interaction.reply({ files: [new MessageAttachment(canvas.createPNGStream())], ephemeral: false });
                 break;
 
             default:

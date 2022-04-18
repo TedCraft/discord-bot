@@ -24,10 +24,10 @@ module.exports = {
     async execute(client, interaction) {
         switch (interaction.options.getSubcommand()) {
             case 'add':
-                add(client, interaction);
+                await add(client, interaction);
                 break;
             case 'delete':
-                del(client, interaction);
+                await del(client, interaction);
                 break;
             default:
                 break;
@@ -57,26 +57,26 @@ module.exports = {
 
 async function add(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        return interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const word = interaction.options.getString('word').toLowerCase();
     const badWord = await getBadWord(client, interaction.guildId, word);
     if (badWord.length != 0)
-        return interaction.reply({ content: `Слово \`${word}\` уже в чёрном списке`, ephemeral: true });
+        return await interaction.reply({ content: `Слово \`${word}\` уже в чёрном списке`, ephemeral: true });
 
     await insertBadWord(client, interaction.guildId, word);
-    interaction.reply({ content: `Слово \`${word}\` добавлено в чёрный список`, ephemeral: true });
+    await interaction.reply({ content: `Слово \`${word}\` добавлено в чёрный список`, ephemeral: true });
 }
 
 async function del(client, interaction) {
     if (!interaction.memberPermissions.has('ADMINISTRATOR'))
-        return interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
+        return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const word = interaction.options.getString('word').toLowerCase();
     const badWord = await getBadWord(client, interaction.guildId, word);
     if (badWord.length == 0)
-        return interaction.reply({ content: `Слова \`${word}\` нет в чёрном списке`, ephemeral: true });
+        return await interaction.reply({ content: `Слова \`${word}\` нет в чёрном списке`, ephemeral: true });
 
     await deleteBadWord(client, interaction.guildId, word);
-    interaction.reply({ content: `Слово \`${word}\` удалено из чёрного списка`, ephemeral: true });
+    await interaction.reply({ content: `Слово \`${word}\` удалено из чёрного списка`, ephemeral: true });
 }

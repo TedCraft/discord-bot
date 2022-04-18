@@ -26,15 +26,15 @@ module.exports = {
             month = interaction.options.getInteger('month');
 
         if (day > new Date(0, 0, day + 1).getDate()) {
-            return interaction.reply({ content: `Введите корректный день!`, ephemeral: true });
+            return await interaction.reply({ content: `Введите корректный день!`, ephemeral: true });
         }
 
         const user = await getUser(client, interaction.user.id);
         if (user.LAST_CHANGE_BDAY != null && Math.ceil((Date.now() - new Date(user.LAST_CHANGE_BDAY)) / (1000 * 60 * 60 * 24)) < 356)
-            return interaction.reply({ content: `Дату рождения можно менять раз в год!`, ephemeral: true })
+            return await interaction.reply({ content: `Дату рождения можно менять раз в год!`, ephemeral: true })
 
         await updateBirthdayUser(client, interaction.user.id, `${day}.${month}.${new Date().getFullYear()}`);
 
-        interaction.reply({ content: `Дата рождения установлена!`, ephemeral: true });
+        await interaction.reply({ content: `Дата рождения установлена!`, ephemeral: true });
     }
 };

@@ -9,14 +9,14 @@ module.exports = {
 
     async execute(client, interaction) {
         const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
-        if (!voiceChannel) return interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
+        if (!voiceChannel) return await interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
 
         const serverQueue = await getAllSongs(client, interaction.guildId);
         await deleteSongs(client, interaction.guildId, serverQueue.length);
-        if (!getVoiceConnection(interaction.guildId)) return interaction.reply({ content: `Бот ничего не играет!`, ephemeral: false });
+        if (!getVoiceConnection(interaction.guildId)) return await interaction.reply({ content: `Бот ничего не играет!`, ephemeral: false });
 
         client.audioPlayers.get(interaction.guildId).stop();
         //getVoiceConnection(interaction.guildId).destroy();
-        interaction.reply({ content: `Отключаюсь.`, ephemeral: false });
+        await interaction.reply({ content: `Отключаюсь.`, ephemeral: false });
     }
 };

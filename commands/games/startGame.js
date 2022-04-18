@@ -26,10 +26,10 @@ module.exports = {
     async execute(client, interaction) {
         switch (interaction.options.getString('game')) {
             case 'города':
-                towns(client, interaction);
+                await towns(client, interaction);
                 break;
             default:
-                interaction.reply({ content: `Название игры указано неправильно.`, ephemeral: true });
+                await interaction.reply({ content: `Название игры указано неправильно.`, ephemeral: true });
                 break;
         }
 
@@ -42,11 +42,11 @@ async function towns(client, interaction) {
 
     const game = interaction.options.getString('game');
     const gameType = await getGameType(client, game);
-    if (!gameType) return interaction.reply({ content: `Игры с названием \`${game}\` не существует!`, ephemeral: true });
+    if (!gameType) return await interaction.reply({ content: `Игры с названием \`${game}\` не существует!`, ephemeral: true });
     if (await getGame(client, interaction.guildId))
-        return interaction.reply({ content: `Игра с названием \`${game}\` уже зарегестрирована в данном канале!`, ephemeral: true });
+        return await interaction.reply({ content: `Игра с названием \`${game}\` уже зарегестрирована в данном канале!`, ephemeral: true });
 
-    interaction.reply({ content: `Игра \`${game}\` начнётся через ${(minutes < 10) ? "0" + minutes : minutes}:${(seconds < 10) ? "0" + seconds : seconds} (${msToTime(new Date().getTime() + minutes * 60 * 1000 + seconds * 1000 + 3 * 60 * 60 * 1000)}). Если вы хотите принять участие, нажмите на :white_check_mark:`, ephemeral: false });
+    await interaction.reply({ content: `Игра \`${game}\` начнётся через ${(minutes < 10) ? "0" + minutes : minutes}:${(seconds < 10) ? "0" + seconds : seconds} (${msToTime(new Date().getTime() + minutes * 60 * 1000 + seconds * 1000 + 3 * 60 * 60 * 1000)}). Если вы хотите принять участие, нажмите на :white_check_mark:`, ephemeral: false });
     const msg = await interaction.fetchReply();
     await msg.react("✅");
     await insertGame(client, interaction.channelId, interaction.guildId, gameType.GAME_TYPE_ID);

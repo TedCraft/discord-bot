@@ -19,10 +19,10 @@ module.exports = {
 
     async execute(client, interaction) {
         const serverQueue = await getAllSongs(client, interaction.guildId);
-        if (serverQueue.length == 0) return interaction.reply({ content: `${message.author} В очереди пусто`, ephemeral: false });
+        if (serverQueue.length == 0) return await interaction.reply({ content: `${message.author} В очереди пусто`, ephemeral: false });
 
         const index = interaction.options.getInteger('track') != null ? interaction.options.getInteger('track') - 1 : 0;
-        if (index > serverQueue.length) return interaction.reply({ content: `${message.author} Композиция под номером ${index + 1} не найдена`, ephemeral: false });
+        if (index > serverQueue.length) return await interaction.reply({ content: `${message.author} Композиция под номером ${index + 1} не найдена`, ephemeral: false });
 
         const count = interaction.options.getInteger('count') < 100 ? interaction.options.getInteger('count') : 100;
 
@@ -45,7 +45,7 @@ module.exports = {
                 elem.THUMBNAIL_URL.toString('utf8'),
                 elem.LENGTH);
         }
-        interaction.reply({ content: `Песня \`${elem.TITLE.toString('utf8')}\` продублирована \`${count} раз\``, ephemeral: false })
+        await interaction.reply({ content: `Песня \`${elem.TITLE.toString('utf8')}\` продублирована \`${count} раз\``, ephemeral: false })
     },
 
     async autoComplete(client, interaction) {

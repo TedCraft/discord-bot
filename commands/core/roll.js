@@ -15,6 +15,6 @@ module.exports = {
     async execute(client, interaction) {
         const from = interaction.options.getInteger('from') != null ? interaction.options.getInteger('from') : 1;
         const to = interaction.options.getInteger('to') != null ? interaction.options.getInteger('to') : 100;
-        interaction.reply({ content: `roll (${from}-${to}): ${getRandomInRange(from, to)}`, ephemeral: false }).catch(err => { });
+        await interaction.reply({ content: `roll (${from}-${to}): ${getRandomInRange(from, to)}`, ephemeral: false }).catch(err => { });
     }
 };

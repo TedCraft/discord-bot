@@ -10,10 +10,10 @@ module.exports = {
         const server = await getRules(client, interaction.guildId);
 
         if (server) {
-            interaction.reply({ content: server.RULES.toString('utf8'), ephemeral: true });
+            await interaction.reply({ content: server.RULES.toString('utf8'), ephemeral: true });
         }
         else {
-            interaction.reply({ content: `Похоже, правил на сервере нет.`, ephemeral: true });
+            await interaction.reply({ content: `Похоже, правил на сервере нет.`, ephemeral: true });
         }
     }
 };
