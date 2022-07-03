@@ -119,7 +119,7 @@ module.exports = {
         const date = new Date();
         const result = await transactionTemplate(client, `UPDATE USER_T
                             SET BIRTHDAY='${birthday}',
-                                LAST_CHANGE_BDAY='${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}'
+                                LAST_CHANGE_BDAY='${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}'
                             WHERE USER_ID=${userId};`);
         return result;
     },
@@ -169,26 +169,51 @@ module.exports = {
         return result;
     },
 
-    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length) {
-        const date = new Date();
+    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, short) {
         const result = await transactionTemplate(client,
-            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, ADD_TIME) 
+            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE) 
              VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', 
-             '${thumbnailUrl}', ${length}, '${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
+             '${thumbnailUrl}', ${length}, '${short}', 
+             (SELECT IN_QUEUE+1 FROM (
+                SELECT IN_QUEUE FROM MUSIC_QUEUE WHERE SERVER_ID = '${serverId}'
+                Union All
+                SELECT -1 FROM rdb$database)
+             ORDER BY IN_QUEUE DESC ROWS 1));`);
+        return result;
+    },
+    
+    async insertSongs(client, songs) {
+        const stringArray = new Array();
+        for (let elem of songs) {
+            stringArray.push(`INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE) VALUES` +
+            `('${elem.SERVER_ID.toString('utf8')}', '${elem.TITLE.toString('utf8').replace(/\'/g, '\'\'')}', ` +
+            `'${elem.URL.toString('utf8')}', '${elem.REQUEST_USER.toString('utf8').replace(/\'/g, '\'\'')}', ` +
+            `'${elem.THUMBNAIL_URL.toString('utf8')}', ${elem.LENGTH}, ` +
+            `${elem.SHORT.toString('utf8')}, ${elem.IN_QUEUE})`);
+        }
+        const result = await transactionTemplate(client,
+            `EXECUTE BLOCK AS BEGIN\n ${stringArray.join(';\n')};\n END`);
         return result;
     },
 
     async deleteSongs(client, serverId, count = 1) {
         const result = await transactionTemplate(client, `DELETE FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
+                          ORDER BY IN_QUEUE ASC
                           ROWS ${count};`);
+        return result;
+    },
+    
+    async deleteAllSongs(client, serverId) {
+        const result = await transactionTemplate(client, `DELETE FROM MUSIC_QUEUE
+                          WHERE SERVER_ID='${serverId}';`);
         return result;
     },
 
     async getSongs(client, serverId, from = 1, to = 1) {
         const result = await transactionTemplate(client, `SELECT * FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
-                          ORDER BY ADD_TIME ASC
+                          ORDER BY IN_QUEUE ASC
                           ROWS ${from} TO ${to};`);
         return result;
     },
@@ -196,7 +221,7 @@ module.exports = {
     async getAllSongs(client, serverId) {
         const result = await transactionTemplate(client, `SELECT * FROM MUSIC_QUEUE
                           WHERE SERVER_ID='${serverId}'
-                          ORDER BY ADD_TIME ASC;`);
+                          ORDER BY IN_QUEUE ASC;`);
         return result;
     },
 
@@ -347,7 +372,7 @@ module.exports = {
         if (townName != null) townName = townName.replace(/\'/g, '\'\'');
         const date = new Date();
         const result = await transactionTemplate(client, `INSERT INTO TOWNS_GAME(CHANNEL_ID, TOWN_ID, GAME_NAME, GAME_DATE)
-                            VALUES('${channelId}', ${townId}, '${townName}', '${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
+                            VALUES('${channelId}', ${townId}, '${townName}', '${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}');`);
         return result;
     },
 
@@ -404,8 +429,8 @@ module.exports = {
 
     async getRules(client, serverId) {
         const result = await transactionTemplate(client, `SELECT * FROM SERVER
-                          WHERE SERVER_ID='${serverId}'
-                          AND RULES IS NOT NULL;`);
+                            WHERE SERVER_ID='${serverId}'
+                            AND RULES IS NOT NULL;`);
         return result[0];
     },
 
@@ -427,8 +452,8 @@ module.exports = {
 
     async getInfo(client, serverId) {
         const result = await transactionTemplate(client, `SELECT * FROM SERVER
-                          WHERE SERVER_ID='${serverId}'
-                          AND INFO IS NOT NULL;`);
+                            WHERE SERVER_ID='${serverId}'
+                            AND INFO IS NOT NULL;`);
         return result[0];
     },
 
@@ -437,6 +462,59 @@ module.exports = {
                             SET INFO=NULL
                             WHERE SERVER_ID='${serverId}'
                             AND INFO IS NOT NULL;`);
+        return result;
+    },
+
+    async getTheme(client, userId) {
+        const result = await transactionTemplate(client, `SELECT * FROM USER_T
+                            WHERE USER_ID='${userId}';`);
+        return result[0];
+    },
+
+    async getThemeEnabled(client, serverId) {
+        const result = await transactionTemplate(client, `SELECT * FROM SERVER
+                            WHERE SERVER_ID='${serverId}';`);
+        return result[0];
+    },
+
+    async setLastSeen(client, userId) {
+        const date = new Date();
+        const result = await transactionTemplate(client, `UPDATE USER_T
+                            SET LAST_SEEN='${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} 6:0:0:0'
+                            WHERE USER_ID='${userId}';`);
+        return result;
+    },
+    
+    /*async insertTheme(client, userId, theme) {
+        const date = new Date(Date.now()-86400000)
+        const result = await transactionTemplate(client, `MERGE INTO USERS_THEME AS t
+                            USING (select '${userId}' as USER_ID, '${theme}' as THEME, '${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}' as LAST_SEEN from rdb$database) as s
+                                ON t.USER_ID = s.USER_ID
+                            WHEN MATCHED THEN
+                                UPDATE SET t.THEME = s.THEME
+                            WHEN NOT MATCHED THEN 
+                                INSERT (USER_ID, THEME, LAST_SEEN) values (s.USER_ID, s.THEME, s.LAST_SEEN);`);
+        return result;
+    },*/
+    
+    async insertTheme(client, userId, theme) {
+        const result = await transactionTemplate(client, `UPDATE USER_T
+                            SET THEME='${theme}'
+                            WHERE USER_ID='${userId}';`);
+        return result;
+    },
+    
+    async deleteTheme(client, userId) {
+        const result = await transactionTemplate(client, `UPDATE USER_T
+                            SET THEME=NULL
+                            WHERE USER_ID='${userId}';`);
+        return result;
+    },
+    
+    async setThemeEnabled(client, serverId, enabled) {
+        const result = await transactionTemplate(client, `UPDATE SERVER
+                            SET THEME_ENABLED=${enabled}
+                            WHERE SERVER_ID='${serverId}';`);
         return result;
     },
 };

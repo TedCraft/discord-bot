@@ -23,6 +23,6 @@ module.exports = {
 
         if (client.audioPlayers.get(interaction.guildId))
             client.audioPlayers.get(interaction.guildId).stop();
-        await interaction.reply({content: `Вы пропустили ${count} композиций.`, ephemeral: false});
+        await interaction.reply({content: `Вы пропустили ${count + 1} композиций.`, ephemeral: false});
     }
 };

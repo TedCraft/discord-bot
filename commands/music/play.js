@@ -5,14 +5,15 @@ const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus,
     createAudioPlayer, AudioPlayerStatus, createAudioResource } = require('@discordjs/voice');
 const { insertSong, deleteSongs, getSongs } = require('../../src/database/database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { sToTime } = require('../../src/utility/time');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('play')
         .setDescription('Добавляет композицию в очередь')
         .addStringOption(option =>
-            option.setName('search_text')
-                .setDescription('Поиск композиции по предложенному тексту.'))
+            option.setName('song_name')
+                .setDescription('Поиск композиции по названию.'))
         .addStringOption(option =>
             option.setName('song')
                 .setDescription('Ссылка на композицию или плейлист.'))
@@ -22,27 +23,34 @@ module.exports = {
                 .setMinValue(1)
                 .setMaxValue(100)),
 
-    async execute(client, interaction, songGiven = undefined, replying = true) {
+    async execute(client, interaction, songGiven = undefined, replying = true, short = false) {
+        if (replying) {
+            await interaction.deferReply().catch(err => {
+                console.log(err);
+            });
+        }
         const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
         if (!voiceChannel) {
-            if (replying) await interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
+            if (replying) await interaction.editReply({ content: `Ты где :face_with_raised_eyebrow:`, ephemeral: true });
             return;
         }
 
         const permissions = voiceChannel.permissionsFor(interaction.client.user);
         if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-            if (replying) await interaction.reply({ content: 'Дайте права :)', ephemeral: true });
+            if (replying) await interaction.editReply({ content: 'Дайте права :)', ephemeral: true });
             return;
         }
 
-        const count = interaction.options.getInteger('count') != null ? (interaction.options.getInteger('count') < 100 ? interaction.options.getInteger('count') : 100) : 1;
+        const count = replying ?
+            (interaction.options.getInteger('count') != null ? (interaction.options.getInteger('count') < 100 ? interaction.options.getInteger('count') : 100) : 1)
+            : 1;
 
         let song = [];
 
         const songUrl = songGiven == undefined ? interaction.options.getString('song') : songGiven,
-            text = interaction.options.getString('search_text');
+            text = replying ? interaction.options.getString('song_name') : undefined;
         if (!songUrl && !text) {
-            if (replying) await interaction.reply({ content: `Укажите композицию.`, ephemeral: true });
+            if (replying) await interaction.editReply({ content: `Укажите композицию.`, ephemeral: true });
             return;
         }
 
@@ -55,31 +63,31 @@ module.exports = {
                 for (const i in plSongs)
                     await getSongFromInfo(plSongs[i], interaction, count);
 
-                if (!getVoiceConnection(interaction.guildId) || interaction.guild.me.voice.channel == null) {
+                if (!getVoiceConnection(interaction.guild.id) || interaction.guild.me.voice.channel == null) {
                     const connection = joinVoiceChannel({
                         channelId: voiceChannel.id,
-                        guildId: interaction.guildId,
+                        guildId: interaction.guild.id,
                         adapterCreator: interaction.guild.voiceAdapterCreator,
                     });
                     connection.on(VoiceConnectionStatus.Ready, async () => {
-                        await play(client, interaction.guild, song);
+                        play(client, interaction.guild, song);
                     });
                 }
-                if (replying) await interaction.reply({ content: `Плейлист \`${pl.title}\` добавлен в очередь`, ephemeral: false });
+                if (replying) await interaction.editReply({ content: `Плейлист \`${pl.title}\` добавлен в очередь`, ephemeral: false });
                 return;
             }
             else if (songUrl.match(/^(?:http|https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([a-zA-Z0-9-_]{11})(?:\S+)?$/) != null) {
-                song = await getSong(songUrl, interaction, count);
+                song = await getSong(songUrl, interaction, count, short);
             }
             else {
-                if (replying) await interaction.reply({ content: `Ссылка введена неверно!`, ephemeral: true });
+                if (replying) await interaction.editReply({ content: `Ссылка введена неверно!`, ephemeral: true });
                 return;
             }
         }
         else {
             const searchResult = await ytsr(text, { limit: 5 });
             if (searchResult.items.length == 0) {
-                if (replying) await interaction.reply({ content: "Не удалось найти композицию!", ephemeral: true });
+                if (replying) await interaction.editReply({ content: "Не удалось найти композицию!", ephemeral: true });
                 return;
             }
             for (const i in searchResult.items) {
@@ -91,14 +99,14 @@ module.exports = {
         }
 
         if (song.length == 0) {
-            if (replying) await interaction.reply({ content: `Невозможно найти композицию!`, ephemeral: true });
+            if (replying) await interaction.editReply({ content: `Невозможно найти композицию!`, ephemeral: true });
             return;
         }
 
-        if (!getVoiceConnection(interaction.guildId) || interaction.guild.me.voice.channel == null) {
+        if (!getVoiceConnection(interaction.guild.id) || interaction.guild.me.voice.channel == null) {
             const connection = joinVoiceChannel({
                 channelId: voiceChannel.id,
-                guildId: interaction.guildId,
+                guildId: interaction.guild.id,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
             });
             connection.on(VoiceConnectionStatus.Ready, async () => {
@@ -107,23 +115,24 @@ module.exports = {
         }
         if (replying) {
             count == 1 && !isNaN(parseInt(count)) ?
-                await interaction.reply({ content: `\`${song.title}\` добавлена в очередь`, ephemeral: false }) :
-                await interaction.reply({ content: `\`${song.title}\` добавлена в очередь (${count})`, ephemeral: false });
+                await interaction.editReply({ content: `\`${song.title}\` добавлена в очередь`, ephemeral: false }) :
+                await interaction.editReply({ content: `\`${song.title}\` добавлена в очередь (${count})`, ephemeral: false });
         }
     }
 };
 
-async function getSong(url, interaction, count = 1) {
+async function getSong(url, interaction, count = 1, short = false) {
     const song = {
         title: null,
         url: null,
-        user: interaction.member.nickname != null ? interaction.member.nickname : interaction.user.username,
+        user: interaction.member.nickname != null ? interaction.member.nickname : interaction.member.user.username,
         thumbnail: null,
-        length: null
+        length: null,
+        short: short
     }
 
     const songInfo = await ytdl.getBasicInfo(url);
-    if (songInfo.videoDetails.isLive || songInfo.title == undefined) return [];
+    if (songInfo.videoDetails.isLive || songInfo.videoDetails.title == undefined) return [];
 
     song.title = songInfo.videoDetails.title;
     song.url = songInfo.videoDetails.video_url;
@@ -131,12 +140,12 @@ async function getSong(url, interaction, count = 1) {
     song.length = songInfo.videoDetails.lengthSeconds;
 
     for (var i = 0; i < count; i++) {
-        await insertSong(client, interaction.guildId, song.title, song.url, song.user, song.thumbnail, song.length);
+        await insertSong(client, interaction.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, short);
     }
     return song;
 }
 
-async function getSongFromInfo(songInfo, interaction, count = 1) {
+async function getSongFromInfo(songInfo, interaction, count = 1, short = false) {
     if (songInfo.isLive || songInfo.title == undefined) return [];
 
     const song = {
@@ -144,7 +153,8 @@ async function getSongFromInfo(songInfo, interaction, count = 1) {
         url: null,
         user: interaction.member.nickname != null ? interaction.member.nickname : interaction.user.username,
         thumbnail: null,
-        length: null
+        length: null,
+        short: short
     }
 
     song.title = songInfo.title;
@@ -162,7 +172,7 @@ async function getSongFromInfo(songInfo, interaction, count = 1) {
     }
 
     for (var i = 0; i < count; i++) {
-        await insertSong(client, interaction.guildId, song.title, song.url, song.user, song.thumbnail, song.length);
+        await insertSong(client, interaction.guild.id, song.title, song.url, song.user, song.thumbnail, song.length, short);
     }
     return song;
 }
@@ -184,19 +194,26 @@ async function play(client, guild, song) {
 
             player.on('error', async (error) => {
                 console.log(error);
-                await toNewSong(client, guild).catch(err => {
-                    console.log(err);
-                });
+                return;
             });
 
             player.on(AudioPlayerStatus.Idle, async () => {
-                await toNewSong(client, guild).catch(err => {
+                toNewSong(client, guild).catch(err => {
                     console.log(err);
                 });
             });
         }
 
-        const audioResource = createAudioResource(ytdl(song.url, { filter: "audioonly", opusEncoded: true, highWaterMark: 1 << 25 }));
+        //console.log(`afade=t=out:st=${song.length > 3 ? (song.length > 45 ? 42 : song.length-3) : 0}:d=${song.length > 5 ? 3 : 0}`)
+        const audioResource = createAudioResource(ytdl(song.url, { 
+            filter: "audioonly", 
+            highWaterMark: 1 << 62,
+            dlChunkSize: 0,
+            quality: "lowestaudio", 
+            opusEncoded: true, 
+            encoderArgs: song.short ? ['-to', '00:00:45', '-af', `afade=t=out:st=${song.length > 3 ? (song.length > 45 ? 42 : song.length-3) : 0}:d=${song.length > 5 ? 3 : 0}`] : undefined 
+        })); //afade=in:d=3,
+
         player.resource = audioResource;
         player.play(audioResource);
     }
@@ -209,9 +226,10 @@ async function toNewSong(client, guild) {
         song = {
             title: newSong[0].TITLE.toString('utf8'),
             url: newSong[0].URL.toString('utf8'),
-            user: newSong[0].THUMBNAIL_URL.toString('utf8'),
-            thumbnail: newSong[0].LENGTH,
-            length: newSong[0].REQUEST_USER.toString('utf8')
+            user: newSong[0].REQUEST_USER.toString('utf8'),
+            thumbnail: newSong[0].THUMBNAIL_URL.toString('utf8'),
+            length: newSong[0].LENGTH,
+            short: newSong[0].SHORT
         }
         await play(client, guild, song);
     }

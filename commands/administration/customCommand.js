@@ -101,7 +101,7 @@ async function add(client, interaction) {
 
     if (imageUrl) {
         await loadImage(imageUrl).catch(async (err) => {
-            await interaction.reply({ content: `Ссылка на изображение введена неправильно!`, ephemeral: true });
+            return await interaction.reply({ content: `Ссылка на изображение введена неправильно!`, ephemeral: true });
         });
     }
 
