@@ -27,11 +27,11 @@ module.exports = {
     },
 
     async checkBadWordsStroke(client, guildId, str) {
-        var args = str.toLowerCase().trim().split(/ +/g);
+        var args = str.trim().split(/ +/g);
         const badWords = await getBadWords(client, guildId);
         for (const i in args) {
             badWords.forEach(function (element) {
-                if (args[i].includes(element))
+                if (args[i].toLowerCase().includes(element))
                     args[i] = replaceWith(args[i], args[i].indexOf(element), "*".repeat(element.length));
             });
         }
@@ -122,23 +122,25 @@ module.exports = {
     },
 
     async executeCustomCommands(client, interaction, command) {
-        var str;
-        var image = [];
+        await interaction.deferReply();
+        const channel = interaction.channel;
+        let str;
+        const image = [];
         if (command.IMAGE_URL) {
             image.push(new MessageAttachment(command.IMAGE_URL.toString('utf8')));
         }
         if (command.TEXT) {
             str = command.TEXT.toString('utf8');
         }
-        const mark = str != undefined || image.length != 0;
-        if (mark) {
-            interaction.reply({ content: str, files: image, ephemeral: false });
-        }
+        const mark = (str != undefined || image.length != 0);
         if (command.SONG_URL) {
             const cmd = client.commands.get("play");
             cmd.execute(client, interaction, command.SONG_URL.toString('utf8'), !mark).catch(err => {
                 console.log(err);
             });
+        }
+        if (mark) {
+            await interaction.editReply({ content: str, files: image, ephemeral: false });
         }
     },
 };

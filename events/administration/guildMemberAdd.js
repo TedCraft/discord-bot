@@ -1,4 +1,4 @@
-const { getUserServers } = require('../../src/database/database');
+const { getUserServers, insertUser } = require('../../src/database/database');
 const { checkBadWordsStroke } = require('../../src/administration/administration');
 
 module.exports = async (client, user_new) => {

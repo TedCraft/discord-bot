@@ -1,6 +1,7 @@
 const { checkCustomCommands, executeCustomCommands } = require('../../src/administration/administration');
+const { Client, CommandInteraction } = require('discord.js')
 
-module.exports = async (client, interaction) => {
+module.exports = async (client = Client.prototype, interaction = CommandInteraction.prototype) => {
     const cmd = client.commands.get(interaction.commandName);
 
     try {
@@ -23,7 +24,7 @@ module.exports = async (client, interaction) => {
         const customCmd = await checkCustomCommands(client, interaction.guildId, interaction.commandName)
         if (customCmd) {
             await executeCustomCommands(client, interaction, customCmd).catch(async (err) => {
-                await interaction.reply("Отказано").catch(ex => { });
+                await interaction.reply({ content: "Отказано", ephemeral: true }).catch(ex => { });
                 console.log(err);
             });
         }

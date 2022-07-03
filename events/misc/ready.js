@@ -32,8 +32,8 @@ module.exports = async (client) => {
         n++;
     }*/
 
-    await checkBirthDays(client);
-    scheduleJob('0 0 * * *', () => { checkBirthDays(client) });
+    await checkBirthDays(client).catch(err => { console.log(err); });
+    scheduleJob('0 0 * * *', () => { checkBirthDays(client).catch(err => { console.log(err); }) });
 
     const rest = new REST({ version: '9' }).setToken(client.config.app.token);
     await (async () => {
