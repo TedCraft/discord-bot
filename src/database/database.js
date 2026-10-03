@@ -169,27 +169,29 @@ module.exports = {
         return result;
     },
 
-    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, short) {
+    async insertSong(client, serverId, title, url, requestUser, thumbnailUrl, length, short, startTime, playTime) {
         const result = await transactionTemplate(client,
-            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE) 
+            `INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE, START_TIME, PLAY_TIME) 
              VALUES('${serverId}', '${title.replace(/\'/g, '\'\'')}', '${url}', '${requestUser.replace(/\'/g, '\'\'')}', 
-             '${thumbnailUrl}', ${length}, '${short}', 
+             '${thumbnailUrl}', ${length}, '${short}',
              (SELECT IN_QUEUE+1 FROM (
                 SELECT IN_QUEUE FROM MUSIC_QUEUE WHERE SERVER_ID = '${serverId}'
                 Union All
                 SELECT -1 FROM rdb$database)
-             ORDER BY IN_QUEUE DESC ROWS 1));`);
+             ORDER BY IN_QUEUE DESC ROWS 1),
+             ${startTime}, ${playTime});`);
         return result;
     },
     
     async insertSongs(client, songs) {
         const stringArray = new Array();
         for (let elem of songs) {
-            stringArray.push(`INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE) VALUES` +
+            stringArray.push(`INSERT INTO MUSIC_QUEUE(SERVER_ID, TITLE, URL, REQUEST_USER, THUMBNAIL_URL, LENGTH, SHORT, IN_QUEUE, START_TIME, PLAY_TIME) VALUES` +
             `('${elem.SERVER_ID.toString('utf8')}', '${elem.TITLE.toString('utf8').replace(/\'/g, '\'\'')}', ` +
             `'${elem.URL.toString('utf8')}', '${elem.REQUEST_USER.toString('utf8').replace(/\'/g, '\'\'')}', ` +
             `'${elem.THUMBNAIL_URL.toString('utf8')}', ${elem.LENGTH}, ` +
-            `${elem.SHORT.toString('utf8')}, ${elem.IN_QUEUE})`);
+            `${elem.SHORT.toString('utf8')}, ${elem.IN_QUEUE}, ` +
+            `${elem.START_TIME}, ${elem.PLAY_TIME})`);
         }
         const result = await transactionTemplate(client,
             `EXECUTE BLOCK AS BEGIN\n ${stringArray.join(';\n')};\n END`);
@@ -473,14 +475,14 @@ module.exports = {
 
     async getThemeEnabled(client, serverId) {
         const result = await transactionTemplate(client, `SELECT * FROM SERVER
-                            WHERE SERVER_ID='${serverId}';`);
+                            WHERE SERVER_ID='${serverId}' AND THEME_ENABLED='TRUE';`);
         return result[0];
     },
 
     async setLastSeen(client, userId) {
         const date = new Date();
         const result = await transactionTemplate(client, `UPDATE USER_T
-                            SET LAST_SEEN='${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} 6:0:0:0'
+                            SET LAST_SEEN='${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}'
                             WHERE USER_ID='${userId}';`);
         return result;
     },
@@ -497,16 +499,20 @@ module.exports = {
         return result;
     },*/
     
-    async insertTheme(client, userId, theme) {
+    async insertTheme(client, userId, theme, startTime, playTime) {
         const result = await transactionTemplate(client, `UPDATE USER_T
-                            SET THEME='${theme}'
+                            SET THEME='${theme}',
+                            THEME_START_TIME=${startTime},
+                            THEME_PLAY_TIME=${playTime}
                             WHERE USER_ID='${userId}';`);
         return result;
     },
     
     async deleteTheme(client, userId) {
         const result = await transactionTemplate(client, `UPDATE USER_T
-                            SET THEME=NULL
+                            SET THEME=NULL,
+                            THEME_START_TIME=NULL,
+                            THEME_PLAY_TIME=NULL
                             WHERE USER_ID='${userId}';`);
         return result;
     },

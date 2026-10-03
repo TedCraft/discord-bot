@@ -2,7 +2,7 @@ const { getBadWords, getUsersBDAYId, getUserBDAYServers,
     getServerCommands, getGame, getGamePlayers,
     getTownsGame, insertGameTown, updateGameTurn,
     getTownAndAlts, getTownGame, getLastTownGame } = require('../database/database');
-const { MessageAttachment } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const { replaceWith } = require('../utility/string');
 const { setTownTimeout } = require('../utility/timer');
 const { get } = require('got');
@@ -54,7 +54,7 @@ module.exports = {
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
-                const member = await guild.members.fetch(usersID[i]);
+                const member = await guild.members.members.fetch(usersID[i]);
                 if (!member.roles.cache.has(role.id)) {
                     member.roles.add(role);
                     console.log(`${dateString} Give ${member.user.username} on ${guild.name} role ${role.name}`);
@@ -70,10 +70,10 @@ module.exports = {
             for (const j in serversID) {
                 const guild = client.guilds.cache.get(serversID[j].SERVER_ID.toString('utf8'));
                 const role = guild.roles.cache.get(serversID[j].BIRTHDAY_ROLE.toString('utf8'));
-                const member = await guild.members.fetch(usersOldID[i]);
+                const member = await guild.members.members.fetch(usersOldID[i]);
                 if (member.roles.cache.has(role.id)) {
-                    member.roles.remove(role);
-                    console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`);
+                    //member.roles.remove(role);
+                    //console.log(`${dateString} Remove ${member.user.username} on ${guild.name} role ${role.name}`);
                 }
             }
         }
@@ -122,12 +122,14 @@ module.exports = {
     },
 
     async executeCustomCommands(client, interaction, command) {
-        await interaction.deferReply();
+        await interaction.deferReply().catch(err => {
+            console.log(err);
+        });
         const channel = interaction.channel;
         let str;
         const image = [];
         if (command.IMAGE_URL) {
-            image.push(new MessageAttachment(command.IMAGE_URL.toString('utf8')));
+            image.push(new AttachmentBuilder(command.IMAGE_URL.toString('utf8')));
         }
         if (command.TEXT) {
             str = command.TEXT.toString('utf8');

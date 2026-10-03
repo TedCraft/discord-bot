@@ -1,6 +1,6 @@
 const { msToTime, sToTime } = require('../../src/utility/time');
 const { getSongs } = require('../../src/database/database');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
@@ -12,12 +12,12 @@ module.exports = {
         const serverQueue = await getSongs(client, interaction.guildId);
         if (serverQueue.length == 0) return await interaction.reply({ content: `В очереди пусто`, ephemeral: false });
 
-        const embed = new MessageEmbed();
-        embed.setColor('RED');
+        const embed = new EmbedBuilder();
+        embed.setColor('#FF0000');
         embed.setTitle('Сейчас играет');
 
         let str = (`\[${serverQueue[0].TITLE.toString('utf8')}\]\(${serverQueue[0].URL.toString('utf8')}\)\n`);
-        let curTime = msToTime(client.audioPlayers.get(interaction.guildId).resource.playbackDuration);
+        let curTime = msToTime(client.audioPlayers.get(interaction.guildId).resource.playbackDuration + serverQueue[0].START_TIME * 1000);
         let lenTime = sToTime(serverQueue[0].LENGTH);
 
         while (lenTime.length > 4) {

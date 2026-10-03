@@ -7,3 +7,4 @@ poe
 music_old
 config.js
 database/DISCORD-BOT.FDB
+ai/model/*

@@ -1,6 +1,6 @@
 const { getAllSongs } = require('../../src/database/database');
 const { msToTime, sToTime } = require('../../src/utility/time');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
@@ -12,8 +12,8 @@ module.exports = {
         const serverQueue = await getAllSongs(client, interaction.guildId);
         if (serverQueue.length == 0) return await interaction.reply({ content: `Очередь пуста`, ephemeral: true });
 
-        const embed = new MessageEmbed();
-        embed.setColor('PURPLE');
+        const embed = new EmbedBuilder();
+        embed.setColor('#800080');
         embed.setTitle('Очередь');
 
         let str = "\*\*Сейчас играет:\*\*\n";

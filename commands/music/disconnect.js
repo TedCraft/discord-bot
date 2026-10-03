@@ -8,7 +8,7 @@ module.exports = {
         .setDescription('Очищает музыкальную очередь и отключает бота.'),
 
     async execute(client, interaction) {
-        const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
+        const voiceChannel = interaction.guild.members.me.voice.channel != undefined ? interaction.guild.members.me.voice.channel : interaction.member.voice.channel;
         if (!voiceChannel) return await interaction.reply({ content: `зайди в войс канал`, ephemeral: true });
 
         const serverQueue = await getAllSongs(client, interaction.guildId);
@@ -16,7 +16,7 @@ module.exports = {
         if (!getVoiceConnection(interaction.guildId)) return await interaction.reply({ content: `Бот ничего не играет!`, ephemeral: false });
 
         client.audioPlayers.get(interaction.guildId).stop();
-        //getVoiceConnection(interaction.guildId).destroy();
+        // getVoiceConnection(interaction.guildId).destroy();
         await interaction.reply({ content: `Отключаюсь.`, ephemeral: false });
     }
 };

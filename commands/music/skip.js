@@ -11,7 +11,7 @@ module.exports = {
                 .setMinValue(1)),
 
     async execute(client, interaction) {
-        const voiceChannel = interaction.guild.me.voice.channel != undefined ? interaction.guild.me.voice.channel : interaction.member.voice.channel;
+        const voiceChannel = interaction.guild.members.me.voice.channel != undefined ? interaction.guild.members.me.voice.channel : interaction.member.voice.channel;
         if (!voiceChannel) return await interaction.reply({content: `зайди в войс канал`, ephemeral: true});
 
         const serverQueue = await getAllSongs(client, interaction.guildId);

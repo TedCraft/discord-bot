@@ -18,7 +18,7 @@ async function checkMessage(client, message) {
     const badWord = await checkBadWordsRelative(client, message.guild.id, args)
     if (badWord != undefined) {
         message.author.send(`Слово ||\`${badWord}\`|| на сервере ${message.guild.name} запрещено!`).catch(err => { });
-        message.delete();
+        message.delete().catch(err => { });
         return true;
     }
     return false;

@@ -11,10 +11,10 @@ module.exports = async (client = Client.prototype, oldState = VoiceState.prototy
             if (userTheme.LAST_SEEN == null) userTheme.LAST_SEEN = new Date(Date.now() - 86400000);
             else userTheme.LAST_SEEN = new Date(userTheme.LAST_SEEN);
 
-            if (userTheme.THEME == null || now.setHours(6, 0, 0, 0) - userTheme.LAST_SEEN.getTime() == 0) return;
+            if (userTheme.THEME == null || now.setHours(6, 0, 0, 0) - userTheme.LAST_SEEN.getTime() < 0) return;
 
             const cmd = client.commands.get("play");
-            cmd.execute(client, newState, userTheme.THEME.toString('utf8'), false, true).catch(err => {
+            cmd.execute(client, newState, userTheme.THEME.toString('utf8'), false, true, userTheme.THEME_START_TIME, userTheme.THEME_PLAY_TIME).catch(err => {
                 console.log(err);
             });
             await setLastSeen(client, newState.member.id);

@@ -15,7 +15,9 @@ module.exports = async (client = Client.prototype, interaction = CommandInteract
 
         if (cmd) {
             await cmd.execute(client, interaction).catch(async (err) => {
-                await interaction.reply({ content: "Отказано", ephemeral: true }).catch(ex => { });
+                await interaction.reply({ content: "Отказано", ephemeral: true }).catch(ex => {
+                    interaction.editReply({ content: "Отказано" })
+                });
                 console.log(err);
             });
             return;

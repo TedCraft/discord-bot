@@ -1,5 +1,5 @@
 const { createCanvas, loadImage } = require('canvas')
-const { MessageAttachment } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
@@ -9,10 +9,11 @@ module.exports = {
         .addStringOption(option =>
             option.setName('обращение')
                 .setDescription('Обращение.')
-                .addChoice('торч', 'торч')
-                .addChoice('друг', 'друг')
-                .addChoice('брух', 'брух')
-                .addChoice('bruh', 'bruh')),
+                .addChoices(
+                    { name: 'торч', value: 'торч' },
+                    { name: 'друг', value: 'друг' },
+                    { name: 'брух', value: 'брух' },
+                    { name: 'bruh', value: 'bruh' })),
 
     async execute(client, interaction) {
         const command = interaction.options.getString('обращение') != undefined ? interaction.options.getString('обращение') : 'кирилл';
@@ -60,7 +61,7 @@ module.exports = {
                 const length2 = ctx.measureText("НАЗАД").width;
                 ctx.fillText("НАЗАД", 580 + Math.round(length1 / 2) - Math.round(length2 / 2), 380);
 
-                await interaction.reply({ files: [new MessageAttachment(canvas.createPNGStream())], ephemeral: false });
+                await interaction.reply({ files: [new AttachmentBuilder(canvas.createPNGStream())], ephemeral: false });
                 break;
 
             default:

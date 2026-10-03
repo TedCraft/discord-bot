@@ -1,5 +1,6 @@
 const { updateRules, deleteRules } = require('../../src/database/database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { PermissionsBitField } = require('discord.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,7 +32,7 @@ module.exports = {
 };
 
 async function set(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const rules = interaction.options.getString('rules');
@@ -41,7 +42,7 @@ async function set(client, interaction) {
 }
 
 async function unset(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     await deleteRules(client, interaction.guildId);

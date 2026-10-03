@@ -1,5 +1,6 @@
 const { insertBadWord, getBadWord, deleteBadWord, getBadWords } = require('../../src/database/database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { PermissionsBitField } = require('discord.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -56,7 +57,7 @@ module.exports = {
 };
 
 async function add(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const word = interaction.options.getString('word').toLowerCase();
@@ -69,7 +70,7 @@ async function add(client, interaction) {
 }
 
 async function del(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const word = interaction.options.getString('word').toLowerCase();

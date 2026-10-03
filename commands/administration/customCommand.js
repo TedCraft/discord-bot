@@ -1,8 +1,10 @@
 const { insertServerCommand, getServerCommand, deleteServerCommand, getServerCommands } = require('../../src/database/database');
 const { loadImage } = require('canvas');
-const ytdl = require('discord-ytdl-core');
-const ytpl = require('ytpl');
+const ytdl = require("@distube/ytdl-core");
+const agent = ytdl.createAgent(client.config.agent)
+const ytpl = require('@distube/ytpl');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { PermissionsBitField } = require('discord.js')
 const { Routes } = require('discord-api-types/v9');
 const { REST } = require('@discordjs/rest');
 
@@ -71,7 +73,7 @@ module.exports = {
 };
 
 async function add(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const songUrl = interaction.options.getString('song'),
@@ -93,7 +95,9 @@ async function add(client, interaction) {
             });
         }
         else {
-            await ytdl.getBasicInfo(songUrl).catch(async (err) => {
+            await ytdl.getBasicInfo(songUrl, { 
+                agent 
+            }).catch(async (err) => {
                 return await interaction.reply({ content: `Ссылка на композицию введена неправильно!`, ephemeral: true });
             });
         }
@@ -125,7 +129,7 @@ async function add(client, interaction) {
 }
 
 async function del(client, interaction) {
-    if (!interaction.memberPermissions.has('ADMINISTRATOR'))
+    if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator))
         return await interaction.reply({ content: `Вы не являетесь администратором!`, ephemeral: true });
 
     const command = interaction.options.getString('command').toLowerCase();

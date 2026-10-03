@@ -8,6 +8,8 @@ const { scheduleJob } = require("node-schedule");
 const { Routes } = require('discord-api-types/v9');
 const { REST } = require('@discordjs/rest');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { YtDlp } = require("ytdlp-nodejs");
+const ytdlp = new YtDlp();
 
 module.exports = async (client) => {
     console.log(`\nLogged to the client ${client.user.username}\n-> Ready on ${client.guilds.cache.size} servers for a total of ${client.users.cache.size} users`);
@@ -17,6 +19,12 @@ module.exports = async (client) => {
     client.db = await connectToDatabase(client);
     await checkDatabase(client);
     console.log(`Database check successful!`);
+
+    console.log(`\nUpdating ytdlp...`);
+    await ytdlp.updateYtDlpAsync({
+        verifyChecksum: false
+    });
+    console.log(`\nytdlp updating complete!`)
 
     /*let temp = readFileSync("C:\\Users\\User\\Desktop\\cities500\\cities500.txt", "utf8");
     temp = temp.split("\n");
@@ -32,8 +40,13 @@ module.exports = async (client) => {
         n++;
     }*/
 
-    await checkBirthDays(client).catch(err => { console.log(err); });
-    scheduleJob('0 0 * * *', () => { checkBirthDays(client).catch(err => { console.log(err); }) });
+    // await checkBirthDays(client).catch(err => { console.log(err); });
+    scheduleJob('0 0 * * *', () => { 
+        // checkBirthDays(client).catch(err => { console.log(err); });
+        ytdlp.updateYtDlpAsync({
+            verifyChecksum: false
+        });
+    });
 
     const rest = new REST({ version: '9' }).setToken(client.config.app.token);
     await (async () => {

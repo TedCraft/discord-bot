@@ -10,7 +10,7 @@ module.exports = {
         .addStringOption(option =>
             option.setName('game')
                 .setDescription('Название игры.')
-                .addChoice('города', 'города')
+                .addChoices({ name: 'города', value: 'города' })
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('minutes')
